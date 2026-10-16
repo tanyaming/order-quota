@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>货号下单额度管理 · 多账号下单记录</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f4f5f7;color:#111827;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+button{font-family:inherit;font-size:14px;cursor:pointer;border-radius:8px;border:1px solid #d7dae0;background:#fff;color:#111827;padding:8px 14px;transition:.15s}
+button:hover{background:#f2f3f5}
+button.primary{background:#4f46e5;border-color:#4f46e5;color:#fff}
+button.primary:hover{background:#4338ca}
+button.danger{background:#fff;border-color:#f0b4b4;color:#c02626}
+button.danger:hover{background:#fdf2f2}
+button.mini{padding:4px 9px;font-size:12.5px;border-radius:6px}
+button.ghost{background:transparent}
+input,select,textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid #d7dae0;border-radius:8px;background:#fff;color:#111827;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+/* topbar */
+.topbar{background:#fff;border-bottom:1px solid #e6e8eb;position:sticky;top:0;z-index:30}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c6cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex:none}
+.brand h1{font-size:16.5px;margin:0;font-weight:650;white-space:nowrap}
+.brand .sub{margin:1px 0 0;font-size:12px;color:#6b7280}
+.month-picker{display:flex;align-items:center;gap:6px;flex:none}
+.month-picker input{width:150px;padding:7px 8px}
+.month-picker button{padding:7px 9px}
+/* tabs */
+.tabs{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+.tab{border:none;background:transparent;color:#5b6472;padding:9px 14px;border-radius:9px 9px 0 0;font-weight:500}
+.tab:hover{background:#eceef1}
+.tab.active{background:#fff;color:#4f46e5;font-weight:650;box-shadow:0 -1px 0 #e6e8eb inset,0 1px 0 #fff}
+main{padding:16px 0 60px}
+.card{background:#fff;border:1px solid #e6e8eb;border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px;font-weight:650}
+.card .desc{font-size:12.5px;color:#6b7280;margin:0 0 14px}
+.muted{color:#6b7280}
+.tiny{font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center}
+.grid{display:grid;gap:12px}
+/* search */
+.search-row{display:flex;gap:10px}
+.search-row input{font-size:17px;padding:13px 15px;letter-spacing:.5px}
+.search-row button{font-size:15px;padding:13px 26px}
+#qHint{margin:10px 2px 0;font-size:12.5px}
+/* result */
+.result{margin-top:16px;border:1px solid #e6e8eb;border-radius:12px;padding:16px;background:#fbfbfd}
+.result.warn{border-color:#f3d9a8;background:#fffdf7}
+.result.bad{border-color:#f4bfbf;background:#fff8f8}
+.res-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pid{font-size:21px;font-weight:700;letter-spacing:.4px}
+.badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:999px;font-weight:600;white-space:nowrap}
+.b-ok{background:#e8f7ee;color:#147a3d}
+.b-warn{background:#fdf3e2;color:#9a6100}
+.b-bad{background:#fdeaea;color:#b32323}
+.b-gray{background:#eef0f2;color:#5b6472}
+.nums{display:flex;gap:22px;margin:14px 0 4px;flex-wrap:wrap}
+.num-i .k{font-size:12px;color:#6b7280}
+.num-i .v{font-size:23px;font-weight:700;line-height:1.25}
+.v-ok{color:#147a3d}.v-warn{color:#9a6100}.v-bad{color:#c02626}.v-blue{color:#4f46e5}
+.bar{height:10px;border-radius:999px;background:#eceef1;overflow:hidden;margin:14px 0 6px}
+.bar>i{display:block;height:100%;border-radius:999px;background:#4f46e5;transition:width .3s}
+.bar.warn>i{background:#e0a13a}.bar.bad>i{background:#d94a4a}
+/* 账号额度列表 */
+.acc-quota{border:1px solid #e6e8eb;border-radius:11px;background:#fff;margin-top:14px;overflow:hidden}
+.acc-quota.scroll{max-height:460px;overflow-y:auto}
+.aq-head{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;background:#fafbfc;border-bottom:1px solid #eef0f2;font-size:12.5px;color:#5b6472;font-weight:600}
+.aq-row{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid #f3f4f6}
+.aq-row:last-child{border-bottom:none}
+.aq-row.full{background:#fff7f7}
+.aq-row.warn{background:#fffdf6}
+.aq-name{flex:1;min-width:0;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aq-used{font-size:12.5px;color:#6b7280;white-space:nowrap}
+.aq-bar{width:130px;height:7px;border-radius:999px;background:#eceef1;overflow:hidden;flex:none}
+.aq-bar>i{display:block;height:100%;border-radius:999px;background:#4f46e5}
+.aq-bar.warn>i{background:#e0a13a}
+.aq-bar.bad>i{background:#d94a4a}
+.aq-remain{font-size:21px;font-weight:700;min-width:86px;text-align:right;white-space:nowrap;letter-spacing:-.3px}
+.aq-remain small{font-size:11.5px;font-weight:500;color:#8b93a1;margin-left:3px;letter-spacing:0}
+@media(max-width:640px){.aq-bar{display:none}.aq-remain{min-width:70px;font-size:19px}.aq-used{font-size:12px}}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{background:#fff;border:1px solid #e0e3e7;border-radius:999px;padding:4px 11px;font-size:12.5px}
+.chip b{font-weight:650}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef0f2;font-size:13.5px}
+th{font-size:12.5px;color:#5b6472;font-weight:600;background:#fafbfc;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbfc}
+.tbl-wrap{border:1px solid #e6e8eb;border-radius:12px;overflow:auto;background:#fff}
+.empty{padding:34px 16px;text-align:center;color:#8b93a1;font-size:13.5px}
+.empty b{display:block;font-size:15px;color:#5b6472;margin-bottom:6px}
+.mini-tbl{margin-top:14px}
+/* filters */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters input,.filters select{width:auto;min-width:130px}
+.spacer{flex:1}
+/* overview */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid #e6e8eb;border-radius:12px;padding:14px 16px}
+.stat .k{font-size:12.5px;color:#6b7280}
+.stat .v{font-size:24px;font-weight:700;margin-top:2px}
+.plist{display:flex;flex-direction:column;gap:10px}
+.pitem{border:1px solid #e9ebee;border-radius:11px;padding:12px 14px;background:#fff}
+.pitem.bad{border-color:#f4bfbf;background:#fff8f8}
+.pitem.warn{border-color:#f3d9a8;background:#fffdf7}
+.pitem-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pitem .pid-sm{font-weight:650;font-size:14.5px}
+/* settings */
+.list-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #eef0f2}
+.list-item:last-child{border-bottom:none}
+.list-item .nm{flex:1;font-size:13.5px}
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(17,24,39,.42);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
+.mask[hidden]{display:none!important}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eef0f2}
+.modal-head h3{margin:0;font-size:15.5px;font-weight:650}
+.modal-body{padding:18px}
+.modal-foot{padding:14px 18px;border-top:1px solid #eef0f2;display:flex;justify-content:flex-end;gap:10px;background:#fbfbfd;border-radius:0 0 14px 14px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12.5px;color:#5b6472;margin-bottom:5px;font-weight:600}
+.field .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hint{font-size:12px;color:#8b93a1;margin-top:5px}
+.x{background:transparent;border:none;font-size:20px;line-height:1;padding:2px 6px;color:#8b93a1}
+.seg{display:inline-flex;background:#eef0f2;border-radius:9px;padding:3px;gap:3px}
+.seg button{border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:13px;color:#5b6472}
+.seg button.on{background:#fff;color:#4f46e5;font-weight:650;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);background:#1f2937;color:#fff;padding:10px 18px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:640px){
+  .brand .sub{display:none}
+  .month-picker input{width:122px}
+  .search-row{flex-direction:column}
+  .nums{gap:16px}
+  .field .two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <div class="logo">限</div>
+      <div>
+        <h1>货号下单额度管理</h1>
+        <p class="sub">多账号下单记录 · 每个账号每个货号每月限 <span id="limitTip">100</span> 单</p>
+      </div>
+    </div>
+    <div class="month-picker">
+      <button id="prevMonth" title="上一月">‹</button>
+      <input type="month" id="monthInput">
+      <button id="nextMonth" title="下一月">›</button>
+      <button id="curMonthBtn" class="ghost" title="回到本月">本月</button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs wrap">
+  <button class="tab active" data-tab="query">查单 / 记单</button>
+  <button class="tab" data-tab="list">下单明细</button>
+  <button class="tab" data-tab="overview">当月总览</button>
+  <button class="tab" data-tab="settings">账号与设置</button>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ 查单 / 记单 ============ -->
+  <section id="view-query">
+    <div class="card">
+      <div class="search-row">
+        <input id="qInput" placeholder="输入货号后回车查询，例如 6012345678901" autocomplete="off">
+        <button id="qBtn" class="primary">查询</button>
+      </div>
+      <div id="qHint" class="muted">输入货号（商品 ID），即可查看每个账号在 <b id="qHintMonth"></b> 的剩余额度</div>
+      <div id="qResult"></div>
+    </div>
+  </section>
+
+  <!-- ============ 下单明细 ============ -->
+  <section id="view-list" hidden>
+    <div class="card">
+      <h2>下单明细</h2>
+      <p class="desc">按月份 / 货号 / 账号筛选全部记录，可直接修改或删除；「该账号剩余额度」为对应货号当月的实时剩余。</p>
+      <div class="filters">
+        <select id="fMonth"></select>
+        <input id="fProduct" placeholder="筛选货号">
+        <input id="fAccount" placeholder="筛选账号">
+        <span class="spacer"></span>
+        <button id="btnExportCsv" class="mini">导出 CSV</button>
+        <button id="btnAddRecord" class="primary mini">+ 新增记录</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>月份</th><th>货号</th><th>账号</th><th>下单数</th><th>该账号剩余额度</th><th>日期</th><th>备注</th><th style="width:110px">操作</th></tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+      <div id="listFoot" class="tiny muted" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- ============ 当月总览 ============ -->
+  <section id="view-overview" hidden>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="card">
+      <h2>各商品当月进度</h2>
+      <p class="desc">按「最紧张的账号」排序，有账号额度用完或接近用完的货号排在最前。</p>
+      <div class="plist" id="overviewList"></div>
+    </div>
+  </section>
+
+  <!-- ============ 账号与设置 ============ -->
+  <section id="view-settings" hidden>
+    <div class="card">
+      <h2>账号列表</h2>
+      <p class="desc">维护下单用的平台账号；查询货号时会列出每个账号在该货号上的剩余额度。</p>
+      <div class="row" style="margin-bottom:12px">
+        <input id="accInput" placeholder="输入账号名称，如 wy001">
+        <button id="accAdd" class="primary" style="flex:none">添加</button>
+      </div>
+      <div id="accList"></div>
+    </div>
+
+    <div class="card">
+      <h2>货号额度</h2>
+      <p class="desc">默认每个账号、每个货号、每月各 100 单；可为个别货号单独设置「每账号每月额度」。</p>
+      <div class="row" style="margin-bottom:12px">
+        <div style="flex:none;width:190px"><label class="tiny muted">默认额度（每账号每月 / 单）</label></div>
+        <input id="defLimit" type="number" min="1" step="1" style="width:110px">
+        <button id="defLimitSave" class="mini">保存</button>
+      </div>
+      <div class="row" style="margin-bottom:14px">
+        <input id="pLimitId" placeholder="货号（商品 ID）">
+        <input id="pLimitVal" type="number" min="1" step="1" placeholder="额度" style="width:110px;flex:none">
+        <button id="pLimitSave" class="primary" style="flex:none">设置</button>
+      </div>
+      <div id="pLimitList"></div>
+    </div>
+
+    <div class="card">
+      <h2>数据管理</h2>
+      <p class="desc">数据保存在当前浏览器本地，请定期导出备份；换电脑时导入即可。</p>
+      <div class="row" style="flex-wrap:wrap">
+        <button id="btnExportJson">导出备份 (JSON)</button>
+        <button id="btnImportJson">导入备份</button>
+        <button id="btnDemo">载入示例数据</button>
+        <span class="spacer"></span>
+        <button id="btnClear" class="danger">清空全部数据</button>
+      </div>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
+      <div id="dataStat" class="tiny muted" style="margin-top:12px"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ 记录弹窗 ============ -->
+<div class="mask" id="mask" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="mTitle">新增下单记录</h3>
+      <button class="x" id="mClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:14px"><div class="seg" id="mMode">
+        <button data-mode="single" class="on">单条录入</button>
+        <button data-mode="batch">批量录入</button>
+      </div></div>
+
+      <div id="mSingle">
+        <div class="field">
+          <label>货号（商品 ID）</label>
+          <input id="mPid" placeholder="货号（商品 ID）" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="two">
+            <div><label>账号</label><input id="mAcc" list="accOptions" placeholder="账号" autocomplete="off"></div>
+            <div><label>下单数量</label><input id="mQty" type="number" min="1" step="1" value="1"></div>
+          </div>
+        </div>
+        <div class="field">
+          <div class="two">
+            <div><label>下单日期</label><input id="mDate" type="date"></div>
+            <div><label>备注（可选）</label><input id="mNote" placeholder="如：店铺A / 第3轮"></div>
+          </div>
+          <div class="hint" id="mDateHint"></div>
+        </div>
+      </div>
+
+      <div id="mBatch" hidden>
+        <div class="field">
+          <label>批量内容</label>
+          <textarea id="mBatchText" rows="8" placeholder="每行一条，格式：账号 数量 [备注]&#10;例如：&#10;wy001 5&#10;wy002 3 第三轮&#10;wy003 2"></textarea>
+          <div class="hint">以空格 / 逗号 / 制表符分隔，每行一个账号；货号与日期使用下方设置。</div>
+        </div>
+        <div class="field">
+          <label>货号（商品 ID）</label>
+          <input id="mBatchPid" placeholder="货号（商品 ID）" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>下单日期</label>
+          <input id="mBatchDate" type="date">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="mCancel">取消</button>
+      <button id="mSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="accOptions"></datalist>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- 存储层 ---------------- */
+var LS = {
+  R:"pol_records_v1",
+  A:"pol_accounts_v1",
+  P:"pol_product_limits_v1",
+  C:"pol_config_v1"
+};
+
+var state = {
+  records: [],
+  accounts: [],
+  productLimits: {},
+  defaultLimit: 100,
+  month: "",
+  tab: "query",
+  query: "",
+  filter: { month: "__cur__", product: "", account: "" },
+  mode: "single",
+  editId: null
+};
+
+function read(key, fallback){
+  try{
+    var v = localStorage.getItem(key);
+    if(!v) return fallback;
+    var p = JSON.parse(v);
+    return (p === null || p === undefined) ? fallback : p;
+  }catch(e){ return fallback; }
+}
+function write(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }
+  catch(e){ toast("保存失败：浏览器存储不可用或已满"); }
+}
+function load(){
+  state.records = read(LS.R, []);
+  state.accounts = read(LS.A, []);
+  state.productLimits = read(LS.P, {});
+  var c = read(LS.C, {});
+  state.defaultLimit = c.defaultLimit || 100;
+  if(!Array.isArray(state.records)) state.records = [];
+  if(!Array.isArray(state.accounts)) state.accounts = [];
+  if(typeof state.productLimits !== "object" || state.productLimits === null) state.productLimits = {};
+}
+function persistAll(){
+  write(LS.R, state.records);
+  write(LS.A, state.accounts);
+  write(LS.P, state.productLimits);
+  write(LS.C, { defaultLimit: state.defaultLimit });
+}
+
+/* ---------------- 工具函数 ---------------- */
+function pad(n){ return n < 10 ? "0" + n : "" + n; }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+function curMonth(){ return todayStr().slice(0,7); }
+function monthLabel(m){
+  if(!m) return "";
+  var p = m.split("-");
+  return p[0] + "年" + parseInt(p[1],10) + "月";
+}
+function esc(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+function shiftMonth(m, delta){
+  var y = parseInt(m.slice(0,4),10), mo = parseInt(m.slice(5,7),10) - 1 + delta;
+  y += Math.floor(mo/12); mo = ((mo%12)+12)%12;
+  return y + "-" + pad(mo+1);
+}
+function toNum(v){
+  var n = parseFloat(v);
+  return (isNaN(n) || n <= 0) ? 0 : n;
+}
+function limitOf(pid){
+  var v = state.productLimits[pid];
+  return (v === undefined || v === null) ? state.defaultLimit : v;
+}
+function agg(pid, month){
+  var rows = [], total = 0, byAcc = {};
+  for(var i=0;i<state.records.length;i++){
+    var r = state.records[i];
+    if(r.productId === pid && r.month === month){
+      rows.push(r); total += r.qty;
+      byAcc[r.account] = (byAcc[r.account] || 0) + r.qty;
+    }
+  }
+  rows.sort(function(a,b){
+    if(a.date === b.date) return a.createdAt - b.createdAt;
+    return a.date < b.date ? -1 : 1;
+  });
+  return { total: total, byAcc: byAcc, rows: rows };
+}
+function usedOf(pid, acc, month, excludeId){
+  var t = 0;
+  for(var i=0;i<state.records.length;i++){
+    var r = state.records[i];
+    if(r.productId === pid && r.account === acc && r.month === month && r.id !== excludeId) t += r.qty;
+  }
+  return t;
+}
+function usedIndex(month){
+  var idx = {};
+  state.records.forEach(function(r){
+    if(r.month !== month) return;
+    var k = r.productId + "\u0001" + r.account;
+    idx[k] = (idx[k] || 0) + r.qty;
+  });
+  return idx;
+}
+/* 某货号当月：各账号的已用 / 剩余额度，剩余少的排前面 */
+function accQuotaList(pid, month, limit){
+  var a = agg(pid, month);
+  var accs = allAccounts().slice();
+  Object.keys(a.byAcc).forEach(function(k){ if(accs.indexOf(k) < 0) accs.push(k); });
+  var list = accs.map(function(acc){
+    var used = a.byAcc[acc] || 0;
+    return { acc: acc, used: used, remain: limit - used, limit: limit, s: statusOf(used, limit) };
+  });
+  list.sort(function(x,y){
+    if(x.remain !== y.remain) return x.remain - y.remain;
+    return x.acc < y.acc ? -1 : (x.acc > y.acc ? 1 : 0);
+  });
+  return list;
+}
+function statusOf(total, limit){
+  if(total > limit) return "bad";
+  if(total === limit) return "full";
+  if(total >= limit * 0.9) return "warn";
+  return "ok";
+}
+function allAccounts(){
+  var set = {};
+  state.accounts.forEach(function(a){ if(a) set[a] = 1; });
+  state.records.forEach(function(r){ if(r.account) set[r.account] = 1; });
+  return Object.keys(set).sort();
+}
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+}
+
+/* ---------------- 顶部月份 ---------------- */
+function setMonth(m, keepQuery){
+  state.month = m;
+  document.getElementById("monthInput").value = m;
+  document.getElementById("qHintMonth").textContent = monthLabel(m);
+  if(!keepQuery) { /* 保留查询结果，便于跨月对比 */ }
+  renderAll();
+}
+
+/* 单个账号额度行（查单页与总览页共用） */
+function quotaRowHtml(x){
+  var limit = x.limit;
+  var pct = Math.min(100, Math.round(x.used / limit * 100));
+  var rowCls = (x.s === "bad" || x.s === "full") ? "full" : (x.s === "warn" ? "warn" : "");
+  var barCls = (x.s === "bad" || x.s === "full") ? "bad" : (x.s === "warn" ? "warn" : "");
+  var numCls = (x.remain <= 0) ? "v-bad" : (x.remain <= limit * 0.1 ? "v-warn" : "v-ok");
+  var txt = x.remain >= 0
+    ? (x.remain + '<small>单可用</small>')
+    : ('超 ' + Math.abs(x.remain) + '<small>单</small>');
+  return '<div class="aq-row ' + rowCls + '">' +
+    '<span class="aq-name">' + esc(x.acc) + '</span>' +
+    '<span class="aq-used">已下 ' + x.used + ' / ' + limit + '</span>' +
+    '<span class="aq-bar ' + barCls + '"><i style="width:' + pct + '%"></i></span>' +
+    '<span class="aq-remain ' + numCls + '">' + txt + '</span>' +
+  '</div>';
+}
+
+/* ---------------- 视图：查单 ---------------- */
+function renderQuery(){
+  var box = document.getElementById("qResult");
+  var pid = state.query.trim();
+  var month = state.month;
+  if(!pid){
+    box.innerHTML = "";
+    return;
+  }
+  var a = agg(pid, month);
+  var limit = limitOf(pid);
+  var qlist = accQuotaList(pid, month, limit);
+  var fullCnt = 0, warnCnt = 0, remainSum = 0;
+  qlist.forEach(function(x){
+    if(x.s === "bad" || x.s === "full") fullCnt++;
+    else if(x.s === "warn") warnCnt++;
+    if(x.remain > 0) remainSum += x.remain;
+  });
+
+  var rowsHtml = a.rows.map(function(r){
+    return "<tr><td>" + esc(r.date) + "</td><td>" + esc(r.account) + "</td><td><b>" + r.qty + "</b></td><td>" + esc(r.note || "-") + "</td></tr>";
+  }).join("");
+
+  var badge = a.total === 0
+    ? '<span class="badge b-gray">本月尚无下单</span>'
+    : (fullCnt ? '<span class="badge b-bad">' + fullCnt + ' 个账号额度已用完</span>'
+               : (warnCnt ? '<span class="badge b-warn">' + warnCnt + ' 个账号额度紧张</span>' : '<span class="badge b-ok">额度充足</span>'));
+  var cls = fullCnt ? "bad" : (warnCnt ? "warn" : "");
+
+  var html = "";
+  html += '<div class="result ' + cls + '">';
+  html +=   '<div class="res-head">';
+  html +=     '<div><div class="pid">' + esc(pid) + '</div><div class="tiny muted" style="margin-top:3px">货号 · ' + monthLabel(month) + ' · 每账号额度 ' + limit + ' 单</div></div>';
+  html +=     '<div>' + badge + '</div>';
+  html +=   '</div>';
+  html +=   '<div class="nums">';
+  html +=     '<div class="num-i"><div class="k">本月合计已下单</div><div class="v v-blue">' + a.total + '</div></div>';
+  html +=     '<div class="num-i"><div class="k">下单账号数</div><div class="v">' + Object.keys(a.byAcc).length + ' / ' + qlist.length + '</div></div>';
+  html +=     '<div class="num-i"><div class="k">剩余额度合计</div><div class="v v-ok">' + remainSum + '</div></div>';
+  html +=     '<div class="num-i"><div class="k">额度已用完账号</div><div class="v ' + (fullCnt ? "v-bad" : "") + '">' + fullCnt + '</div></div>';
+  html +=   '</div>';
+
+  html += '<div class="acc-quota' + (qlist.length > 8 ? " scroll" : "") + '">';
+  html +=   '<div class="aq-head"><span>各账号剩余额度（' + esc(pid) + ' · ' + monthLabel(month) + '）</span><span>共 ' + qlist.length + ' 个账号</span></div>';
+  if(!qlist.length){
+    html += '<div class="empty" style="padding:20px"><b>还没有账号</b>请先到「账号与设置」添加账号</div>';
+  }
+  qlist.forEach(function(x){ html += quotaRowHtml(x); });
+  html += '</div>';
+
+  html +=   '<div class="row" style="margin-top:16px;flex-wrap:wrap">';
+  html +=     '<button class="primary mini" data-act="add" data-pid="' + esc(pid) + '">+ 记录下单</button>';
+  html +=     '<button class="mini" data-act="batch" data-pid="' + esc(pid) + '">批量录入</button>';
+  html +=     '<button class="mini" data-act="limit" data-pid="' + esc(pid) + '">设置该货号额度</button>';
+  html +=     '<button class="mini" data-act="accounts">管理账号</button>';
+  html +=   '</div>';
+  if(a.rows.length){
+    html += '<div class="mini-tbl"><table><thead><tr><th>日期</th><th>账号</th><th>数量</th><th>备注</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+  }
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+/* ---------------- 视图：明细 ---------------- */
+function renderFilterOptions(){
+  var sel = document.getElementById("fMonth");
+  var months = {};
+  state.records.forEach(function(r){ months[r.month] = 1; });
+  months[state.month] = 1;
+  months[curMonth()] = 1;
+  var list = Object.keys(months).sort().reverse();
+  var html = '<option value="__cur__">当前查看月份（' + monthLabel(state.month) + '）</option>';
+  html += '<option value="__all">全部月份</option>';
+  list.forEach(function(m){ html += '<option value="' + m + '">' + monthLabel(m) + '</option>'; });
+  sel.innerHTML = html;
+  sel.value = state.filter.month;
+  if(sel.value !== state.filter.month) { sel.value = "__cur__"; state.filter.month = "__cur__"; }
+}
+function filteredRecords(){
+  var f = state.filter;
+  var pm = f.product.trim().toLowerCase();
+  var am = f.account.trim().toLowerCase();
+  return state.records.filter(function(r){
+    if(f.month === "__cur__"){ if(r.month !== state.month) return false; }
+    else if(f.month !== "__all"){ if(r.month !== f.month) return false; }
+    if(pm && String(r.productId).toLowerCase().indexOf(pm) < 0) return false;
+    if(am && String(r.account).toLowerCase().indexOf(am) < 0) return false;
+    return true;
+  }).sort(function(a,b){
+    if(a.month !== b.month) return a.month < b.month ? 1 : -1;
+    if(a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return b.createdAt - a.createdAt;
+  });
+}
+function renderList(){
+  renderFilterOptions();
+  var rows = filteredRecords();
+  var body = document.getElementById("listBody");
+  var idxCache = {};
+  function remainAt(r){
+    if(!idxCache[r.month]) idxCache[r.month] = usedIndex(r.month);
+    var used = idxCache[r.month][r.productId + "\u0001" + r.account] || 0;
+    var lim = limitOf(r.productId);
+    var remain = lim - used;
+    var cls = remain <= 0 ? "v-bad" : (remain <= lim * 0.1 ? "v-warn" : "v-ok");
+    return '<td class="' + cls + '" style="font-weight:600;white-space:nowrap">' +
+      (remain >= 0 ? remain : "超 " + Math.abs(remain)) + " / " + lim + "</td>";
+  }
+  if(!rows.length){
+    body.innerHTML = '<tr><td colspan="8"><div class="empty"><b>暂无记录</b>切换到「查单 / 记单」录入第一笔下单记录</div></td></tr>';
+  } else {
+    var html = "";
+    rows.forEach(function(r){
+      html += "<tr>";
+      html += "<td>" + monthLabel(r.month) + "</td>";
+      html += "<td><b>" + esc(r.productId) + "</b></td>";
+      html += "<td>" + esc(r.account) + "</td>";
+      html += "<td><b>" + r.qty + "</b></td>";
+      html += remainAt(r);
+      html += "<td>" + esc(r.date || "-") + "</td>";
+      html += "<td>" + esc(r.note || "-") + "</td>";
+      html += '<td><button class="mini" data-edit="' + r.id + '">编辑</button> <button class="mini danger" data-del="' + r.id + '">删除</button></td>';
+      html += "</tr>";
+    });
+    body.innerHTML = html;
+  }
+  var sum = rows.reduce(function(t,r){ return t + r.qty; }, 0);
+  var pids = {}, accs = {};
+  rows.forEach(function(r){ pids[r.productId] = 1; accs[r.account] = 1; });
+  document.getElementById("listFoot").textContent = "共 " + rows.length + " 条记录 · 合计 " + sum + " 单 · 涉及 " + Object.keys(pids).length + " 个货号 · " + Object.keys(accs).length + " 个账号";
+}
+
+/* ---------------- 视图：总览 ---------------- */
+function renderOverview(){
+  var month = state.month;
+  var idx = usedIndex(month);
+  var byPid = {}, totalOrders = 0, comboCnt = 0, fullCnt = 0, warnCnt = 0;
+  state.records.forEach(function(r){
+    if(r.month !== month) return;
+    totalOrders += r.qty;
+    if(!byPid[r.productId]) byPid[r.productId] = { total:0, accs:[] };
+    byPid[r.productId].total += r.qty;
+  });
+  var pids = Object.keys(byPid);
+  pids.forEach(function(p){
+    var limit = limitOf(p);
+    var accs = [];
+    Object.keys(idx).forEach(function(k){
+      var i = k.indexOf("\u0001");
+      if(k.slice(0, i) !== p) return;
+      var used = idx[k];
+      var s = statusOf(used, limit);
+      comboCnt++;
+      if(s === "bad" || s === "full") fullCnt++; else if(s === "warn") warnCnt++;
+      accs.push({ acc: k.slice(i+1), used: used, remain: limit - used, limit: limit, s: s });
+    });
+    accs.sort(function(x,y){
+      if(x.remain !== y.remain) return x.remain - y.remain;
+      return x.acc < y.acc ? -1 : 1;
+    });
+    byPid[p].accs = accs;
+    byPid[p].limit = limit;
+    byPid[p].minRemain = accs.length ? accs[0].remain : limit;
+  });
+  pids.sort(function(a,b){
+    if(byPid[a].minRemain !== byPid[b].minRemain) return byPid[a].minRemain - byPid[b].minRemain;
+    return byPid[b].total - byPid[a].total;
+  });
+
+  document.getElementById("statGrid").innerHTML =
+    '<div class="stat"><div class="k">' + monthLabel(month) + ' 合计下单</div><div class="v v-blue">' + totalOrders + '</div></div>' +
+    '<div class="stat"><div class="k">涉及货号数</div><div class="v">' + pids.length + '</div></div>' +
+    '<div class="stat"><div class="k">账号×货号组合</div><div class="v">' + comboCnt + '</div></div>' +
+    '<div class="stat"><div class="k">额度已用完组合</div><div class="v ' + (fullCnt ? "v-bad" : "") + '">' + fullCnt + '</div></div>' +
+    '<div class="stat"><div class="k">额度紧张（≥90%）</div><div class="v ' + (warnCnt ? "v-warn" : "") + '">' + warnCnt + '</div></div>';
+
+  var box = document.getElementById("overviewList");
+  if(!pids.length){
+    box.innerHTML = '<div class="empty"><b>本月还没有下单记录</b>在「查单 / 记单」页录入后，这里会显示每个货号下各账号的剩余额度</div>';
+    return;
+  }
+  var html = "";
+  pids.forEach(function(p){
+    var g = byPid[p];
+    var cls = g.minRemain <= 0 ? "bad" : (g.minRemain <= g.limit * 0.1 ? "warn" : "");
+    var badge = g.minRemain <= 0 ? '<span class="badge b-bad">有账号额度用完</span>'
+              : (cls === "warn" ? '<span class="badge b-warn">有账号额度紧张</span>' : '<span class="badge b-ok">额度充足</span>');
+    html += '<div class="pitem ' + cls + '">';
+    html +=   '<div class="pitem-head"><div class="row" style="gap:9px"><span class="pid-sm">' + esc(p) + '</span>' + badge + '</div>' +
+              '<div class="tiny muted">本月合计 ' + g.total + ' 单 · ' + g.accs.length + ' 个账号 · 每账号额度 ' + g.limit + ' 单</div></div>';
+    html +=   '<div class="acc-quota" style="margin-top:10px">';
+    g.accs.forEach(function(x){ html += quotaRowHtml(x); });
+    html +=   '</div>';
+    html +=   '<div class="row" style="margin-top:10px"><button class="mini" data-goto="' + esc(p) + '">查看与记单</button></div>';
+    html += '</div>';
+  });
+  box.innerHTML = html;
+}
+
+/* ---------------- 视图：设置 ---------------- */
+function renderSettings(){
+  document.getElementById("defLimit").value = state.defaultLimit;
+  document.getElementById("limitTip").textContent = state.defaultLimit;
+
+  var accs = allAccounts();
+  var list = document.getElementById("accList");
+  if(!accs.length){
+    list.innerHTML = '<div class="empty" style="padding:18px"><b>还没有账号</b>添加后录入时可一键选择</div>';
+  } else {
+    var html = "";
+    accs.forEach(function(a){
+      var cnt = state.records.filter(function(r){ return r.account === a; }).length;
+      html += '<div class="list-item"><span class="nm">' + esc(a) + '</span><span class="tiny muted">' + cnt + ' 条记录</span><button class="mini danger" data-accdel="' + esc(a) + '">删除</button></div>';
+    });
+    list.innerHTML = html;
+  }
+
+  var pids = Object.keys(state.productLimits).sort();
+  var pl = document.getElementById("pLimitList");
+  if(!pids.length){
+    pl.innerHTML = '<div class="tiny muted">暂无单独设置的货号，所有货号均按「每账号每月 ' + state.defaultLimit + ' 单」的默认额度计算。</div>';
+  } else {
+    var h = "";
+    pids.forEach(function(p){
+      h += '<div class="list-item"><span class="nm"><b>' + esc(p) + '</b></span><span class="tiny muted">每账号 ' + state.productLimits[p] + ' 单/月</span><button class="mini danger" data-plimdel="' + esc(p) + '">移除</button></div>';
+    });
+    pl.innerHTML = h;
+  }
+
+  var totalQty = state.records.reduce(function(t,r){ return t + r.qty; }, 0);
+  document.getElementById("dataStat").textContent =
+    "本地已保存：" + state.records.length + " 条记录 / 合计 " + totalQty + " 单 · 账号 " + state.accounts.length + " 个 · 自定义额度货号 " + pids.length + " 个";
+}
+
+/* ---------------- 渲染调度 ---------------- */
+function renderAll(){
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.classList.toggle("active", b.dataset.tab === state.tab);
+  });
+  document.getElementById("view-query").hidden = state.tab !== "query";
+  document.getElementById("view-list").hidden = state.tab !== "list";
+  document.getElementById("view-overview").hidden = state.tab !== "overview";
+  document.getElementById("view-settings").hidden = state.tab !== "settings";
+  renderAccOptions();
+  if(state.tab === "query") renderQuery();
+  if(state.tab === "list") renderList();
+  if(state.tab === "overview") renderOverview();
+  if(state.tab === "settings") renderSettings();
+}
+function renderAccOptions(){
+  document.getElementById("accOptions").innerHTML = allAccounts().map(function(a){
+    return '<option value="' + esc(a) + '"></option>';
+  }).join("");
+}
+function switchTab(t){
+  state.tab = t;
+  renderAll();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------------- 弹窗 ---------------- */
+function openModal(opts){
+  opts = opts || {};
+  state.mode = opts.mode || "single";
+  state.editId = opts.editId || null;
+  var isEdit = !!opts.editId;
+  document.getElementById("mTitle").textContent = isEdit ? "编辑下单记录" : "新增下单记录";
+  document.getElementById("mMode").style.display = isEdit ? "none" : "";
+  document.getElementById("mSingle").hidden = false;
+  document.getElementById("mBatch").hidden = true;
+  document.querySelectorAll("#mMode button").forEach(function(b){
+    b.classList.toggle("on", b.dataset.mode === state.mode);
+  });
+
+  var today = todayStr();
+  document.getElementById("mPid").value = opts.productId || "";
+  document.getElementById("mAcc").value = opts.account || "";
+  document.getElementById("mQty").value = "1";
+  document.getElementById("mDate").value = today;
+  document.getElementById("mNote").value = "";
+  document.getElementById("mBatchPid").value = opts.productId || "";
+  document.getElementById("mBatchDate").value = today;
+  document.getElementById("mBatchText").value = "";
+
+  if(state.mode === "batch" && !isEdit){
+    document.getElementById("mSingle").hidden = true;
+    document.getElementById("mBatch").hidden = false;
+  }
+
+  if(isEdit){
+    var r = state.records.filter(function(x){ return x.id === state.editId; })[0];
+    if(r){
+      document.getElementById("mPid").value = r.productId;
+      document.getElementById("mAcc").value = r.account;
+      document.getElementById("mQty").value = r.qty;
+      document.getElementById("mDate").value = r.date || today;
+      document.getElementById("mNote").value = r.note || "";
+    }
+  }
+  document.getElementById("mask").hidden = false;
+  setTimeout(function(){
+    var f = (isEdit || opts.mode === "batch") ? document.getElementById("mPid") : document.getElementById("mPid");
+    f.focus();
+  }, 30);
+}
+function closeModal(){ document.getElementById("mask").hidden = true; state.editId = null; }
+function mDateHint(){
+  var d = document.getElementById("mDate").value || todayStr();
+  document.getElementById("mDateHint").textContent = "将记入 " + monthLabel(d.slice(0,7)) + "（每账号额度按自然月计算）";
+}
+
+/* ---------------- 写入记录 ---------------- */
+function validateBeforeSave(pid, acc, month, addQty, excludeId){
+  var used = usedOf(pid, acc, month, excludeId);
+  var limit = limitOf(pid);
+  var after = used + addQty;
+  if(after > limit){
+    return "账号「" + acc + "」的货号 " + pid + " 在 " + monthLabel(month) + "：\n已下单 " + used + " 单，剩余额度 " + Math.max(0, limit - used) + " 单。\n本次增加 " + addQty + " 单后共 " + after + " 单，将超过额度 " + limit + " 单。\n\n是否继续保存？";
+  }
+  return "";
+}
+function saveSingle(){
+  var pid = document.getElementById("mPid").value.trim();
+  var acc = document.getElementById("mAcc").value.trim();
+  var qty = toNum(document.getElementById("mQty").value);
+  var date = document.getElementById("mDate").value || todayStr();
+  var note = document.getElementById("mNote").value.trim();
+
+  if(!pid){ toast("请填写货号"); document.getElementById("mPid").focus(); return; }
+  if(!acc){ toast("请填写账号"); document.getElementById("mAcc").focus(); return; }
+  if(!qty){ toast("下单数量必须大于 0"); document.getElementById("mQty").focus(); return; }
+  var month = date.slice(0,7);
+
+  if(state.editId){
+    var idx = -1;
+    for(var i=0;i<state.records.length;i++){ if(state.records[i].id === state.editId){ idx = i; break; } }
+    if(idx < 0){ toast("记录不存在"); closeModal(); return; }
+    var warn = validateBeforeSave(pid, acc, month, qty, state.editId);
+    if(warn && !confirm(warn)) return;
+    var old = state.records[idx];
+    old.productId = pid; old.account = acc; old.qty = qty; old.date = date; old.month = month; old.note = note;
+    persistAll(); closeModal(); refreshAfterChange();
+    toast("已更新记录");
+    return;
+  }
+
+  var msg = validateBeforeSave(pid, acc, month, qty, null);
+  if(msg && !confirm(msg)) return;
+
+  state.records.push({
+    id: uid(), productId: pid, account: acc, qty: qty,
+    date: date, month: month, note: note, createdAt: Date.now()
+  });
+  if(state.accounts.indexOf(acc) < 0) state.accounts.push(acc);
+  persistAll(); closeModal(); refreshAfterChange();
+  var left = limitOf(pid) - usedOf(pid, acc, month, null);
+  toast("已记录：" + acc + " · " + qty + " 单 · 该货号当月剩余 " + (left >= 0 ? left : "超 " + Math.abs(left)) + " 单");
+}
+function saveBatch(){
+  var pid = document.getElementById("mBatchPid").value.trim();
+  var date = document.getElementById("mBatchDate").value || todayStr();
+  var text = document.getElementById("mBatchText").value;
+  if(!pid){ toast("请填写货号"); document.getElementById("mBatchPid").focus(); return; }
+  var lines = text.split(/\r?\n/);
+  var items = [], bad = [];
+  lines.forEach(function(line, i){
+    var s = line.trim();
+    if(!s) return;
+    var parts = s.split(/[\s,，\t]+/);
+    if(parts.length < 2){ bad.push(i+1); return; }
+    var acc = parts[0], q = toNum(parts[1]);
+    if(!q){ bad.push(i+1); return; }
+    var note = parts.slice(2).join(" ");
+    items.push({ account: acc, qty: q, note: note });
+  });
+  if(!items.length){ toast(bad.length ? ("第 " + bad.join("/") + " 行格式有误") : "没有可导入的内容"); return; }
+
+  var month = date.slice(0,7);
+  var limit = limitOf(pid);
+  var addTotal = 0, overCnt = 0, lines = [];
+  items.forEach(function(x){
+    var used = usedOf(pid, x.account, month);
+    var after = used + x.qty;
+    addTotal += x.qty;
+    var over = after > limit;
+    if(over) overCnt++;
+    lines.push("· " + x.account + "：" + used + " → " + after + " / " + limit + (over ? "（超限）" : "（写入后剩 " + (limit - after) + "）"));
+  });
+  var tip = "货号 " + pid + " · " + monthLabel(month) + "，共写入 " + items.length + " 条、合计 " + addTotal + " 单：\n\n";
+  tip += lines.slice(0, 12).join("\n");
+  if(lines.length > 12) tip += "\n… 其余 " + (lines.length - 12) + " 条";
+  if(overCnt) tip += "\n\n⚠ 其中 " + overCnt + " 个账号将超过额度 " + limit + " 单！";
+  if(bad.length) tip += "\n\n忽略格式有误的行：" + bad.join("、");
+  if(!confirm(tip)) return;
+
+  items.forEach(function(x){
+    state.records.push({
+      id: uid(), productId: pid, account: x.account, qty: x.qty,
+      date: date, month: month, note: x.note, createdAt: Date.now()
+    });
+    if(state.accounts.indexOf(x.account) < 0) state.accounts.push(x.account);
+  });
+  persistAll(); closeModal(); refreshAfterChange();
+  toast("已批量写入 " + items.length + " 条记录");
+}
+function refreshAfterChange(){
+  var q = document.getElementById("qInput").value.trim();
+  state.query = q;
+  renderAll();
+}
+
+/* ---------------- 导入导出 ---------------- */
+function download(name, content, type){
+  var blob = new Blob([content], { type: type || "application/json;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+}
+function exportJson(){
+  var pack = {
+    app: "product-order-limit", version: 1, exportedAt: new Date().toISOString(),
+    records: state.records, accounts: state.accounts,
+    productLimits: state.productLimits, defaultLimit: state.defaultLimit
+  };
+  download("下单限额备份_" + todayStr() + ".json", JSON.stringify(pack, null, 2));
+  toast("备份已导出");
+}
+function csvCell(v){
+  var s = String(v == null ? "" : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function exportCsv(){
+  var rows = filteredRecords();
+  if(!rows.length){ toast("当前筛选结果为空"); return; }
+  var idxCache = {};
+  var lines = ["月份,货号,账号,下单数,该账号当月剩余额度,下单日期,备注"];
+  rows.forEach(function(r){
+    if(!idxCache[r.month]) idxCache[r.month] = usedIndex(r.month);
+    var used = idxCache[r.month][r.productId + "\u0001" + r.account] || 0;
+    var remain = limitOf(r.productId) - used;
+    lines.push([r.month, r.productId, r.account, r.qty, remain, r.date || "", r.note || ""].map(csvCell).join(","));
+  });
+  download("下单明细_" + todayStr() + ".csv", "\ufeff" + lines.join("\r\n"), "text/csv;charset=utf-8");
+  toast("CSV 已导出（" + rows.length + " 条）");
+}
+function importJson(file){
+  var fr = new FileReader();
+  fr.onload = function(){
+    var pack;
+    try{ pack = JSON.parse(fr.result); }
+    catch(e){ toast("文件不是有效的 JSON"); return; }
+    if(!pack || !Array.isArray(pack.records)){ toast("文件格式不正确"); return; }
+    var n = pack.records.filter(function(r){ return r && r.productId && r.account && r.qty; }).length;
+    var mode = confirm("检测到 " + n + " 条有效记录。\n\n点击「确定」= 合并到现有数据（重复记录可能保留两份）\n点击「取消」= 放弃导入");
+    if(!mode) return;
+    var exist = {};
+    state.records.forEach(function(r){ exist[r.productId + "|" + r.account + "|" + r.month + "|" + r.qty + "|" + (r.date||"")] = 1; });
+    var added = 0;
+    pack.records.forEach(function(r){
+      if(!r || !r.productId || !r.account || !r.qty) return;
+      var key = r.productId + "|" + r.account + "|" + r.month + "|" + r.qty + "|" + (r.date||"");
+      if(exist[key]) return;
+      exist[key] = 1;
+      state.records.push({
+        id: r.id || uid(), productId: String(r.productId), account: String(r.account),
+        qty: Number(r.qty), date: r.date || (r.month ? r.month + "-01" : todayStr()),
+        month: r.month || ((r.date || todayStr()).slice(0,7)),
+        note: r.note || "", createdAt: r.createdAt || Date.now()
+      });
+      added++;
+    });
+    if(Array.isArray(pack.accounts)) pack.accounts.forEach(function(a){ if(a && state.accounts.indexOf(a) < 0) state.accounts.push(a); });
+    if(pack.productLimits && typeof pack.productLimits === "object"){
+      Object.keys(pack.productLimits).forEach(function(k){ state.productLimits[k] = Number(pack.productLimits[k]) || state.defaultLimit; });
+    }
+    persistAll(); renderAll();
+    toast("导入完成：新增 " + added + " 条，跳过重复 " + (n - added) + " 条");
+  };
+  fr.readAsText(file, "utf-8");
+}
+function loadDemo(){
+  if(!confirm("将添加一批示例数据（3 个商品 / 4 个账号），现有数据不受影响。继续？")) return;
+  var m = state.month;
+  var demo = [
+    ["100234567","wy001",12,2],["100234567","wy002",9,1],["100234567","shop_a",40,3],["100234567","shop_b",31,4],
+    ["200888001","wy001",55,6],["200888001","wy003",44,5],
+    ["300777222","shop_a",18,2]
+  ];
+  demo.forEach(function(d,i){
+    state.records.push({ id: uid(), productId: d[0], account: d[1], qty: d[2], date: m + "-" + pad(Math.min(28, i+1)), month: m, note: "", createdAt: Date.now() + i });
+    if(state.accounts.indexOf(d[1]) < 0) state.accounts.push(d[1]);
+  });
+  persistAll(); renderAll();
+  toast("示例数据已载入");
+}
+
+/* ---------------- 事件绑定 ---------------- */
+function bind(){
+  // tabs
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.addEventListener("click", function(){ switchTab(b.dataset.tab); });
+  });
+  // 月份
+  document.getElementById("monthInput").addEventListener("change", function(e){
+    var v = e.target.value;
+    if(v) setMonth(v);
+  });
+  document.getElementById("prevMonth").addEventListener("click", function(){ setMonth(shiftMonth(state.month, -1)); });
+  document.getElementById("nextMonth").addEventListener("click", function(){ setMonth(shiftMonth(state.month, 1)); });
+  document.getElementById("curMonthBtn").addEventListener("click", function(){ setMonth(curMonth()); });
+
+  // 查询
+  var qi = document.getElementById("qInput");
+  qi.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ state.query = qi.value.trim(); renderQuery(); }
+  });
+  qi.addEventListener("input", function(){ state.query = qi.value.trim(); });
+  document.getElementById("qBtn").addEventListener("click", function(){
+    state.query = qi.value.trim();
+    if(!state.query){ toast("请输入货号"); qi.focus(); return; }
+    renderQuery();
+  });
+
+  // 查询结果内的按钮（事件委托）
+  document.getElementById("qResult").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-act]");
+    if(!b) return;
+    var pid = b.dataset.pid, act = b.dataset.act;
+    if(act === "add") openModal({ mode:"single", productId: pid });
+    else if(act === "batch") openModal({ mode:"batch", productId: pid });
+    else if(act === "accounts") switchTab("settings");
+    else if(act === "limit"){
+      var cur = limitOf(pid);
+      var v = prompt("设置货号 " + pid + " 的「每账号每月额度」（单）：", cur);
+      if(v === null) return;
+      var n = toNum(v);
+      if(!n){ toast("请输入大于 0 的数字"); return; }
+      state.productLimits[pid] = n;
+      persistAll(); renderAll();
+      toast("已将货号 " + pid + " 的额度设为每账号 " + n + " 单/月");
+    }
+  });
+
+  // 明细
+  document.getElementById("fMonth").addEventListener("change", function(e){ state.filter.month = e.target.value; renderList(); });
+  document.getElementById("fProduct").addEventListener("input", function(e){ state.filter.product = e.target.value; renderList(); });
+  document.getElementById("fAccount").addEventListener("input", function(e){ state.filter.account = e.target.value; renderList(); });
+  document.getElementById("btnExportCsv").addEventListener("click", exportCsv);
+  document.getElementById("btnAddRecord").addEventListener("click", function(){ openModal({ mode:"single" }); });
+  document.getElementById("listBody").addEventListener("click", function(e){
+    var ed = e.target.closest("button[data-edit]");
+    var dl = e.target.closest("button[data-del]");
+    if(ed){ openModal({ editId: ed.dataset.edit }); return; }
+    if(dl){
+      var r = state.records.filter(function(x){ return x.id === dl.dataset.del; })[0];
+      if(!r) return;
+      if(!confirm("删除这条记录？\n" + r.productId + " · " + r.account + " · " + r.qty + " 单 · " + r.date)) return;
+      state.records = state.records.filter(function(x){ return x.id !== r.id; });
+      persistAll(); renderList(); renderAccOptions();
+      toast("已删除");
+    }
+  });
+
+  // 总览
+  document.getElementById("overviewList").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-goto]");
+    if(!b) return;
+    state.query = b.dataset.goto;
+    document.getElementById("qInput").value = state.query;
+    switchTab("query");
+  });
+
+  // 设置：账号
+  document.getElementById("accAdd").addEventListener("click", function(){
+    var v = document.getElementById("accInput").value.trim();
+    if(!v){ toast("请输入账号名称"); return; }
+    if(state.accounts.indexOf(v) >= 0){ toast("该账号已存在"); return; }
+    state.accounts.push(v); persistAll();
+    document.getElementById("accInput").value = "";
+    renderSettings(); renderAccOptions();
+    toast("已添加账号：" + v);
+  });
+  document.getElementById("accInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter") document.getElementById("accAdd").click();
+  });
+  document.getElementById("accList").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-accdel]");
+    if(!b) return;
+    var a = b.dataset.accdel;
+    var cnt = state.records.filter(function(r){ return r.account === a; }).length;
+    if(cnt && !confirm("账号 " + a + " 下还有 " + cnt + " 条下单记录，删除账号不会删除记录。继续？")) return;
+    state.accounts = state.accounts.filter(function(x){ return x !== a; });
+    persistAll(); renderSettings(); renderAccOptions();
+    toast("已删除账号");
+  });
+
+  // 设置：限额
+  document.getElementById("defLimitSave").addEventListener("click", function(){
+    var n = toNum(document.getElementById("defLimit").value);
+    if(!n){ toast("请输入大于 0 的数字"); return; }
+    state.defaultLimit = n; persistAll();
+    document.getElementById("limitTip").textContent = n;
+    renderSettings();
+    toast("默认额度已设为「每账号每月 " + n + " 单」");
+  });
+  document.getElementById("pLimitSave").addEventListener("click", function(){
+    var pid = document.getElementById("pLimitId").value.trim();
+    var n = toNum(document.getElementById("pLimitVal").value);
+    if(!pid){ toast("请输入货号"); return; }
+    if(!n){ toast("请输入额度"); return; }
+    state.productLimits[pid] = n; persistAll();
+    document.getElementById("pLimitId").value = "";
+    document.getElementById("pLimitVal").value = "";
+    renderSettings();
+    toast("已设置货号 " + pid + "：每账号 " + n + " 单/月");
+  });
+  document.getElementById("pLimitList").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-plimdel]");
+    if(!b) return;
+    delete state.productLimits[b.dataset.plimdel];
+    persistAll(); renderSettings();
+    toast("已恢复为默认额度");
+  });
+
+  // 数据管理
+  document.getElementById("btnExportJson").addEventListener("click", exportJson);
+  document.getElementById("btnImportJson").addEventListener("click", function(){ document.getElementById("fileInput").click(); });
+  document.getElementById("fileInput").addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if(f) importJson(f);
+    e.target.value = "";
+  });
+  document.getElementById("btnDemo").addEventListener("click", loadDemo);
+  document.getElementById("btnClear").addEventListener("click", function(){
+    if(!confirm("确定清空全部数据？包括 " + state.records.length + " 条下单记录、账号和额度设置。")) return;
+    if(!confirm("再次确认：清空后无法恢复，建议先导出备份。继续？")) return;
+    state.records = []; state.accounts = []; state.productLimits = {}; state.defaultLimit = 100;
+    persistAll(); renderAll();
+    toast("数据已清空");
+  });
+
+  // 弹窗
+  document.getElementById("mClose").addEventListener("click", closeModal);
+  document.getElementById("mCancel").addEventListener("click", closeModal);
+  document.getElementById("mask").addEventListener("click", function(e){ if(e.target === document.getElementById("mask")) closeModal(); });
+  document.getElementById("mSave").addEventListener("click", function(){
+    if(state.mode === "batch" && !state.editId) saveBatch(); else saveSingle();
+  });
+  document.getElementById("mMode").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-mode]"); if(!b) return;
+    state.mode = b.dataset.mode;
+    document.querySelectorAll("#mMode button").forEach(function(x){ x.classList.toggle("on", x.dataset.mode === state.mode); });
+    document.getElementById("mSingle").hidden = state.mode !== "single";
+    document.getElementById("mBatch").hidden = state.mode !== "batch";
+  });
+  document.getElementById("mDate").addEventListener("change", mDateHint);
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && !document.getElementById("mask").hidden) closeModal();
+    if((e.metaKey || e.ctrlKey) && e.key === "Enter" && !document.getElementById("mask").hidden){
+      document.getElementById("mSave").click();
+    }
+  });
+  // 表单内回车快捷保存
+  ["mPid","mAcc","mQty","mNote"].forEach(function(id){
+    document.getElementById(id).addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); document.getElementById("mSave").click(); }
+    });
+  });
+  mDateHint();
+}
+
+/* ---------------- 启动 ---------------- */
+load();
+state.month = curMonth();
+bind();
+document.getElementById("monthInput").value = state.month;
+setMonth(state.month);
+
+})();
+</script>
+</body>
+</html>

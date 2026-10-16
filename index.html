@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>下单额度管理</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#f4f5f7;color:#111827;font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+button{font-family:inherit;font-size:14px;cursor:pointer;border-radius:8px;border:1px solid #d7dae0;background:#fff;color:#111827;padding:8px 14px;transition:.15s}
+button:hover{background:#f2f3f5}
+button.primary{background:#4f46e5;border-color:#4f46e5;color:#fff}
+button.primary:hover{background:#4338ca}
+button.primary:disabled,button:disabled{opacity:.55;cursor:not-allowed}
+button.danger{background:#fff;border-color:#f0b4b4;color:#c02626}
+button.danger:hover{background:#fdf2f2}
+button.mini{padding:4px 9px;font-size:12.5px;border-radius:6px}
+input,select,textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid #d7dae0;border-radius:8px;background:#fff;color:#111827;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border:1px solid #e6e8eb;border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 4px;font-weight:650}
+.card .desc{font-size:12.5px;color:#6b7280;margin:0 0 14px}
+.login-card{width:100%;max-width:390px}
+.logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#7c6cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px}
+h1{font-size:19px;margin:0 0 4px;font-weight:650}
+.sub{font-size:12.5px;color:#6b7280;margin:0 0 20px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12.5px;color:#5b6472;margin-bottom:5px;font-weight:600}
+.msg{font-size:13px;padding:9px 12px;border-radius:8px;margin-bottom:12px;display:none}
+.msg.err{display:block;background:#fdeaea;color:#b32323}
+.msg.ok{display:block;background:#e8f7ee;color:#147a3d}
+.muted{color:#6b7280}
+.tiny{font-size:12.5px}
+.topbar{background:#fff;border-bottom:1px solid #e6e8eb;position:sticky;top:0;z-index:30}
+.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .logo{width:36px;height:36px;font-size:16px;border-radius:10px;flex:none}
+.brand h1{font-size:16px;margin:0;white-space:nowrap}
+.month-picker{display:flex;align-items:center;gap:6px;flex:none}
+.month-picker input{width:148px;padding:7px 8px}
+.month-picker button{padding:7px 9px}
+.tabs{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+.tab{border:none;background:transparent;color:#5b6472;padding:9px 14px;border-radius:9px 9px 0 0;font-weight:500}
+.tab:hover{background:#eceef1}
+.tab.active{background:#fff;color:#4f46e5;font-weight:650;box-shadow:0 -1px 0 #e6e8eb inset,0 1px 0 #fff}
+main{padding:16px 0 70px}
+.search-row{display:flex;gap:10px}
+.search-row input{font-size:17px;padding:13px 15px;letter-spacing:.5px}
+.search-row button{font-size:15px;padding:13px 26px;flex:none}
+.result{margin-top:16px;border:1px solid #e6e8eb;border-radius:12px;padding:16px;background:#fbfbfd}
+.result.warn{border-color:#f3d9a8;background:#fffdf7}
+.result.bad{border-color:#f4bfbf;background:#fff8f8}
+.res-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pid{font-size:21px;font-weight:700;letter-spacing:.4px;word-break:break-all}
+.badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:999px;font-weight:600;white-space:nowrap}
+.b-ok{background:#e8f7ee;color:#147a3d}
+.b-warn{background:#fdf3e2;color:#9a6100}
+.b-bad{background:#fdeaea;color:#b32323}
+.b-gray{background:#eef0f2;color:#5b6472}
+.b-blue{background:#eae9fd;color:#4f46e5}
+.ck-list{max-height:330px;overflow:auto;border:1px solid #e6e8eb;border-radius:11px;background:#fff}
+.ck-list .list-item{padding:10px 12px;cursor:pointer}
+.ck-list .list-item input{width:auto;flex:none;margin:0}
+.ck-list .list-item:hover{background:#fafbfc}
+.entry-list{border:1px solid #e6e8eb;border-radius:11px;background:#fff;max-height:330px;overflow-y:auto}
+.entry-row{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #f2f3f5}
+.entry-row:last-child{border-bottom:0}
+.entry-row.entry-head{background:#fafbfc;font-size:12px;color:#6b7280;padding:6px 12px;position:sticky;top:0;z-index:1}
+.entry-row .ea{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry-row .eu{flex:none;width:158px;text-align:right;white-space:nowrap}
+.entry-row .eq{width:86px;flex:none;text-align:center;padding:6px 8px}
+.entry-row .eq-h{width:86px;flex:none;text-align:center}
+.entry-row.has{background:#f7f7ff}
+.entry-row.over{background:#fdf2f2}
+.entry-row.over .eq{border-color:#e5a3a3}
+.entry-row.dup{background:#fffaf0}
+.entry-row.dup .ep{border-color:#e5c98a}
+.entry-row .ep{flex:1;min-width:0;padding:6px 9px;font-size:13px;letter-spacing:.3px}
+.entry-row .ex{flex:none;width:24px;height:24px;padding:0;border:0;background:transparent;color:#b6bdc7;font-size:17px;line-height:1;border-radius:6px}
+.entry-row .ex:hover{background:#f2f3f5;color:#c02626}
+.acc-chips{display:flex;gap:8px;flex-wrap:wrap;max-height:120px;overflow-y:auto;padding:1px 0}
+.acc-chip{flex:none;padding:6px 13px;border:1px solid #d7dae0;border-radius:999px;background:#fff;font-size:13px;color:#374151;line-height:1.35}
+.acc-chip:hover{background:#f2f3f5}
+.acc-chip.on{background:#4f46e5;border-color:#4f46e5;color:#fff;font-weight:600}
+.acc-chip.on:hover{background:#4338ca}
+@media(max-width:560px){
+  .entry-row .eu{width:100px}
+  .entry-row .eq{width:66px}
+  .entry-row .eq-h{width:66px}
+}
+.nums{display:flex;gap:22px;margin:14px 0 4px;flex-wrap:wrap}
+.num-i .k{font-size:12px;color:#6b7280}
+.num-i .v{font-size:23px;font-weight:700;line-height:1.25}
+.v-ok{color:#147a3d}.v-warn{color:#9a6100}.v-bad{color:#c02626}.v-blue{color:#4f46e5}
+.acc-quota{border:1px solid #e6e8eb;border-radius:11px;background:#fff;margin-top:14px;overflow:hidden}
+.acc-quota.scroll{max-height:460px;overflow-y:auto}
+.aq-head{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;background:#fafbfc;border-bottom:1px solid #eef0f2;font-size:12.5px;color:#5b6472;font-weight:600}
+.aq-row{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid #f3f4f6}
+.aq-row:last-child{border-bottom:none}
+.aq-row.full{background:#fff7f7}
+.aq-row.warn{background:#fffdf6}
+.aq-name{flex:1;min-width:0;font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aq-used{font-size:12.5px;color:#6b7280;white-space:nowrap}
+.aq-bar{width:125px;height:7px;border-radius:999px;background:#eceef1;overflow:hidden;flex:none}
+.aq-bar>i{display:block;height:100%;border-radius:999px;background:#4f46e5}
+.aq-bar.warn>i{background:#e0a13a}
+.aq-bar.bad>i{background:#d94a4a}
+.aq-remain{font-size:21px;font-weight:700;min-width:86px;text-align:right;white-space:nowrap;letter-spacing:-.3px}
+.aq-remain small{font-size:11.5px;font-weight:500;color:#8b93a1;margin-left:3px;letter-spacing:0}
+@media(max-width:640px){.aq-bar{display:none}.aq-remain{min-width:70px;font-size:19px}.aq-used{font-size:12px}}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #eef0f2;font-size:13.5px}
+th{font-size:12.5px;color:#5b6472;font-weight:600;background:#fafbfc;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fafbfc}
+.tbl-wrap{border:1px solid #e6e8eb;border-radius:12px;overflow:auto;background:#fff}
+.empty{padding:30px 16px;text-align:center;color:#8b93a1;font-size:13.5px}
+.empty b{display:block;font-size:15px;color:#5b6472;margin-bottom:6px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters input,.filters select{width:auto;min-width:125px}
+.spacer{flex:1}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid #e6e8eb;border-radius:12px;padding:14px 16px}
+.stat .k{font-size:12.5px;color:#6b7280}
+.stat .v{font-size:24px;font-weight:700;margin-top:2px}
+.plist{display:flex;flex-direction:column;gap:10px}
+.pitem{border:1px solid #e9ebee;border-radius:11px;padding:12px 14px;background:#fff}
+.pitem.bad{border-color:#f4bfbf;background:#fff8f8}
+.pitem.warn{border-color:#f3d9a8;background:#fffdf7}
+.pitem-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pid-sm{font-weight:650;font-size:14.5px;word-break:break-all}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.list-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eef0f2;flex-wrap:wrap}
+.list-item:last-child{border-bottom:none}
+.list-item .nm{flex:1;min-width:120px;font-size:13.5px}
+.mask{position:fixed;inset:0;background:rgba(17,24,39,.42);display:flex;align-items:center;justify-content:center;padding:18px;z-index:60}
+.mask[hidden]{display:none!important}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:540px;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.18)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eef0f2}
+.modal-head h3{margin:0;font-size:15.5px;font-weight:650}
+.modal-body{padding:18px}
+.modal-foot{padding:14px 18px;border-top:1px solid #eef0f2;display:flex;justify-content:flex-end;gap:10px;background:#fbfbfd;border-radius:0 0 14px 14px}
+.x{background:transparent;border:none;font-size:20px;line-height:1;padding:2px 6px;color:#8b93a1}
+.hint{font-size:12px;color:#8b93a1;margin-top:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.two{grid-template-columns:1fr}}
+.seg{display:inline-flex;background:#eef0f2;border-radius:9px;padding:3px;gap:3px}
+.seg button{border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:13px;color:#5b6472}
+.seg button.on{background:#fff;color:#4f46e5;font-weight:650;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,20px);background:#1f2937;color:#fff;padding:10px 18px;border-radius:10px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.loading{padding:30px;text-align:center;color:#8b93a1;font-size:13.5px}
+</style>
+</head>
+<body>
+<div id="app"><div class="center"><div class="muted">正在加载…</div></div></div>
+<div class="mask" id="mask" hidden><div class="modal" id="modal"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ================= 配置 ================= */
+var PUBLIC_CONFIG = {
+  endpoint: "https://order-quota.app.workbuddy.host",
+  oauthRelayBaseUrl: "https://www.workbuddy.cn/v2/as/genie-baas/oauth",
+  publishableKey: "wbpk_c9U187dBqjV5JL5zeCS2mM_yHukQ3Kv1v7cVI1kVLGd0JXhHjfaudWe"
+};
+
+var cloud = null;
+var state = {
+  token: localStorage.getItem("pol_token") || "",
+  user: null,
+  month: "",
+  defaultLimit: 100,
+  tab: "query",
+  accounts: [],
+  months: [],
+  query: "",
+  qdata: null,
+  orders: [],
+  filters: { month: "__cur__", product: "", account: "", created_by: "" },
+  admin: { customers: [], accounts: [], limits: [], defaultLimit: 100 },
+  busy: false
+};
+
+/* ================= 工具 ================= */
+function h(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function pad(n){ return n < 10 ? "0" + n : "" + n; }
+function todayStr(){ var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+function curMonth(){ return todayStr().slice(0,7); }
+function monthLabel(m){ if(!m) return ""; var p = String(m).split("-"); return p[0] + "年" + parseInt(p[1],10) + "月"; }
+function shiftMonth(m, d){ var y = parseInt(m.slice(0,4),10), mo = parseInt(m.slice(5,7),10) - 1 + d; y += Math.floor(mo/12); mo = ((mo%12)+12)%12; return y + "-" + pad(mo+1); }
+function num(v){ var n = parseInt(v,10); return isNaN(n) ? 0 : n; }
+function isAdmin(){ return state.user && state.user.role === "admin"; }
+function statusCls(used, limit){ if(used > limit) return "bad"; if(used === limit) return "full"; if(used >= limit*0.9) return "warn"; return "ok"; }
+function shell(html){ document.getElementById("app").innerHTML = html; }
+function toast(msg, ms){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove("show"); }, ms || 2400);
+}
+function escAttr(s){ return h(s).replace(/\n/g, " "); }
+
+/* ================= 云端调用 ================= */
+function rpcCall(fn, args){
+  return cloud.database.rpc(fn, args).then(function(res){
+    if(res.error){
+      var e = res.error;
+      throw new Error((e.message || e.details || "请求失败") + (e.code ? " (" + e.code + ")" : ""));
+    }
+    return res.data;
+  });
+}
+function api(action, payload){
+  return rpcCall("fn_api", { p_token: state.token, p_action: action, p_payload: payload || {} })
+    .then(function(d){
+      if(d && d.ok === false && d.code === "AUTH"){
+        state.token = ""; localStorage.removeItem("pol_token");
+        renderLogin(d.error || "登录已过期，请重新登录");
+        throw new Error("AUTH");
+      }
+      return d;
+    });
+}
+function adminApi(action, payload){
+  return rpcCall("fn_admin", { p_token: state.token, p_action: action, p_payload: payload || {} });
+}
+
+/* ================= 模态框 ================= */
+function openModal(title, bodyHtml, footHtml){
+  document.getElementById("modal").innerHTML =
+    '<div class="modal-head"><h3>' + h(title) + '</h3><button class="x" id="mClose">×</button></div>' +
+    '<div class="modal-body">' + bodyHtml + '</div>' +
+    '<div class="modal-foot">' + (footHtml || '<button id="mCancel">取消</button><button id="mOk" class="primary">保存</button>') + '</div>';
+  document.getElementById("mask").hidden = false;
+  var c = document.getElementById("mClose"), k = document.getElementById("mCancel");
+  if(c) c.addEventListener("click", closeModal);
+  if(k) k.addEventListener("click", closeModal);
+}
+function closeModal(){ document.getElementById("mask").hidden = true; document.getElementById("modal").innerHTML = ""; }
+document.getElementById("mask").addEventListener("click", function(e){ if(e.target === this) closeModal(); });
+document.addEventListener("keydown", function(e){
+  if(e.key === "Escape") closeModal();
+  if((e.metaKey || e.ctrlKey) && e.key === "Enter"){
+    var b = document.getElementById("mOk");
+    if(b && !document.getElementById("mask").hidden) b.click();
+  }
+});
+
+/* ================= 登录页 ================= */
+function renderLogin(errMsg){
+  state.user = null;
+  shell(
+    '<div class="center"><div class="login-card">' +
+      '<div class="logo" style="margin-bottom:14px">限</div>' +
+      '<h1>下单额度管理</h1>' +
+      '<p class="sub">请使用管理员或客户账号登录</p>' +
+      '<div id="loginMsg" class="msg' + (errMsg ? ' err' : '') + '">' + h(errMsg || '') + '</div>' +
+      '<div class="field"><label>账号</label><input id="u" autocomplete="username" placeholder="请输入账号"></div>' +
+      '<div class="field"><label>密码</label><input id="p" type="password" autocomplete="current-password" placeholder="请输入密码"></div>' +
+      '<button id="btnLogin" class="primary" style="width:100%;padding:11px;font-size:15px;margin-top:6px">登 录</button>' +
+      '<p class="tiny muted" style="margin:14px 0 0;text-align:center">账号由管理员分配</p>' +
+    '</div></div>'
+  );
+  var btn = document.getElementById("btnLogin");
+  function submit(){
+    var u = document.getElementById("u").value.trim();
+    var p = document.getElementById("p").value;
+    var box = document.getElementById("loginMsg");
+    if(!u || !p){ box.className = "msg err"; box.textContent = "请输入账号和密码"; return; }
+    btn.disabled = true; btn.textContent = "登录中…";
+    rpcCall("fn_login", { p_username: u, p_password: p }).then(function(d){
+      if(!d || d.ok !== true){
+        btn.disabled = false; btn.textContent = "登 录";
+        box.className = "msg err"; box.textContent = (d && d.error) || "登录失败";
+        return;
+      }
+      state.token = d.token;
+      localStorage.setItem("pol_token", d.token);
+      state.user = { username: d.username, role: d.role, display_name: d.display_name };
+      state.tab = "query";
+      boot();
+    }).catch(function(e){
+      btn.disabled = false; btn.textContent = "登 录";
+      box.className = "msg err"; box.textContent = "请求失败：" + e.message;
+    });
+  }
+  btn.addEventListener("click", submit);
+  ["u","p"].forEach(function(id){
+    document.getElementById(id).addEventListener("keydown", function(e){ if(e.key === "Enter") submit(); });
+  });
+  setTimeout(function(){ var el = document.getElementById("u"); if(el) el.focus(); }, 50);
+}
+
+/* ================= 主框架 ================= */
+function tabsOf(){
+  return isAdmin()
+    ? [["query","查单 / 记单"],["orders","下单明细"],["overview","当月总览"],["settings","账号与设置"]]
+    : [["query","查单 / 记单"],["mine","我的下单"],["account","我的账号"]];
+}
+function renderShell(bodyHtml){
+  var tabs = tabsOf().map(function(t){
+    return '<button class="tab' + (state.tab === t[0] ? " active" : "") + '" data-tab="' + t[0] + '">' + h(t[1]) + '</button>';
+  }).join("");
+  shell(
+    '<div class="topbar"><div class="wrap topbar-inner">' +
+      '<div class="brand"><div class="logo">限</div><div>' +
+        '<h1>下单额度管理</h1>' +
+        '<div class="tiny muted">' + h(state.user.display_name) + ' · ' + (isAdmin() ? "管理员" : "客户") + ' · 每账号每货号每月 ' + state.defaultLimit + ' 单' +
+          (isAdmin() ? "" : ' · 可用账号 ' + state.accounts.length + ' 个') + '</div>' +
+      '</div></div>' +
+      '<div class="month-picker">' +
+        '<button id="prevMonth" title="上一月">‹</button>' +
+        '<input type="month" id="monthInput" value="' + h(state.month) + '">' +
+        '<button id="nextMonth" title="下一月">›</button>' +
+        '<button id="curMonthBtn" title="回到本月">本月</button>' +
+        '<button id="btnLogout" class="mini">退出</button>' +
+      '</div>' +
+    '</div></div>' +
+    '<nav class="tabs wrap">' + tabs + '</nav>' +
+    '<main class="wrap">' + bodyHtml + '</main>'
+  );
+  document.querySelectorAll(".tab").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.tab = b.dataset.tab;
+      renderTab();
+    });
+  });
+  document.getElementById("monthInput").addEventListener("change", function(e){
+    if(e.target.value){ state.month = e.target.value; state.qdata = null; renderTab(); }
+  });
+  document.getElementById("prevMonth").addEventListener("click", function(){ state.month = shiftMonth(state.month, -1); state.qdata = null; renderTab(); });
+  document.getElementById("nextMonth").addEventListener("click", function(){ state.month = shiftMonth(state.month, 1); state.qdata = null; renderTab(); });
+  document.getElementById("curMonthBtn").addEventListener("click", function(){ state.month = curMonth(); state.qdata = null; renderTab(); });
+  document.getElementById("btnLogout").addEventListener("click", function(){
+    api("logout").catch(function(){}).then(function(){
+      state.token = ""; localStorage.removeItem("pol_token");
+      renderLogin("");
+    });
+  });
+}
+function renderTab(){
+  // 当月总览仅管理员可见，客户角色落到该标签时回退到查单页
+  if(state.tab === "overview" && !isAdmin()) state.tab = "query";
+  if(state.tab === "query") renderQuery();
+  else if(state.tab === "mine") renderOrders("mine");
+  else if(state.tab === "orders") renderOrders("all");
+  else if(state.tab === "overview") renderOverview();
+  else if(state.tab === "account") renderAccount();
+  else if(state.tab === "settings") renderSettings();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ================= 账号额度行 ================= */
+function quotaRowHtml(x, limit){
+  var pct = Math.min(100, Math.round(x.used / limit * 100));
+  var s = statusCls(x.used, limit);
+  var rowCls = (s === "bad" || s === "full") ? "full" : (s === "warn" ? "warn" : "");
+  var barCls = (s === "bad" || s === "full") ? "bad" : (s === "warn" ? "warn" : "");
+  var remain = limit - x.used;
+  var numCls = remain <= 0 ? "v-bad" : (remain <= limit * 0.1 ? "v-warn" : "v-ok");
+  var txt = remain >= 0 ? (remain + '<small>单可用</small>') : ('超 ' + Math.abs(remain) + '<small>单</small>');
+  return '<div class="aq-row ' + rowCls + '">' +
+    '<span class="aq-name">' + h(x.account) + '</span>' +
+    '<span class="aq-used">已下 ' + x.used + ' / ' + limit + '</span>' +
+    '<span class="aq-bar ' + barCls + '"><i style="width:' + pct + '%"></i></span>' +
+    '<span class="aq-remain ' + numCls + '">' + txt + '</span>' +
+  '</div>';
+}
+
+/* ================= 查单 / 记单 ================= */
+function renderQuery(autoPid){
+  renderShell(
+    '<div class="card">' +
+      '<div class="search-row">' +
+        '<input id="qInput" placeholder="输入货号（商品 ID）后回车查询" autocomplete="off" value="' + h(state.query) + '">' +
+        '<button id="qBtn" class="primary">查询</button>' +
+      '</div>' +
+      '<div id="qHint" class="tiny muted" style="margin:10px 2px 0">输入货号，即可查看每个平台账号在 <b>' + monthLabel(state.month) + '</b> 的剩余额度</div>' +
+      '<div id="qResult"></div>' +
+    '</div>'
+  );
+  var qi = document.getElementById("qInput");
+  function doQuery(pid){
+    pid = (pid !== undefined ? pid : qi.value).trim();
+    state.query = pid;
+    if(!pid){ toast("请输入货号"); qi.focus(); return; }
+    var box = document.getElementById("qResult");
+    box.innerHTML = '<div class="loading">查询中…</div>';
+    api("quota_summary", { product_id: pid, month: state.month }).then(function(d){
+      if(!d || d.ok !== false){
+        state.qdata = d;
+        renderQueryResult(box, d);
+      } else {
+        box.innerHTML = '<div class="result bad" style="margin-top:16px">' + h(d.error || "查询失败") + '</div>';
+      }
+    }).catch(function(e){
+      if(e.message !== "AUTH") box.innerHTML = '<div class="result bad" style="margin-top:16px">查询失败：' + h(e.message) + '</div>';
+    });
+  }
+  document.getElementById("qBtn").addEventListener("click", function(){ doQuery(); });
+  qi.addEventListener("keydown", function(e){ if(e.key === "Enter") doQuery(); });
+  if(autoPid){ qi.value = autoPid; doQuery(autoPid); }
+  else if(state.qdata && state.qdata.product_id === state.query) renderQueryResult(document.getElementById("qResult"), state.qdata);
+}
+function renderQueryResult(box, d){
+  var pid = d.product_id, limit = d.limit, accs = d.accounts || [];
+  var totalUsed = d.total || 0, usedAccs = 0, remainSum = 0, fullCnt = 0, warnCnt = 0;
+  accs.forEach(function(a){
+    if(a.used > 0) usedAccs++;
+    var r = limit - a.used;
+    if(r > 0) remainSum += r;
+    var s = statusCls(a.used, limit);
+    if(s === "bad" || s === "full") fullCnt++; else if(s === "warn") warnCnt++;
+  });
+  var badge = totalUsed === 0 ? '<span class="badge b-gray">本月尚无下单</span>'
+    : (fullCnt ? '<span class="badge b-bad">' + fullCnt + ' 个账号额度已用完</span>'
+      : (warnCnt ? '<span class="badge b-warn">' + warnCnt + ' 个账号额度紧张</span>' : '<span class="badge b-ok">额度充足</span>'));
+  var cls = fullCnt ? "bad" : (warnCnt ? "warn" : "");
+  var html = '<div class="result ' + cls + '">';
+  html += '<div class="res-head"><div><div class="pid">' + h(pid) + '</div>' +
+          '<div class="tiny muted" style="margin-top:3px">货号 · ' + monthLabel(d.month) + ' · 每账号额度 ' + limit + ' 单</div></div>' +
+          '<div>' + badge + '</div></div>';
+  html += '<div class="nums">' +
+            '<div class="num-i"><div class="k">本月合计已下单</div><div class="v v-blue">' + totalUsed + '</div></div>' +
+            '<div class="num-i"><div class="k">下单账号数</div><div class="v">' + usedAccs + ' / ' + accs.length + '</div></div>' +
+            '<div class="num-i"><div class="k">剩余额度合计</div><div class="v v-ok">' + remainSum + '</div></div>' +
+            '<div class="num-i"><div class="k">额度已用完账号</div><div class="v ' + (fullCnt ? "v-bad" : "") + '">' + fullCnt + '</div></div>' +
+          '</div>';
+  html += '<div class="acc-quota' + (accs.length > 8 ? " scroll" : "") + '">' +
+          '<div class="aq-head"><span>各账号剩余额度</span><span>共 ' + accs.length + ' 个账号</span></div>';
+  if(!accs.length) html += '<div class="empty" style="padding:20px"><b>还没有可用的平台账号</b>' + (isAdmin() ? "请到「账号与设置」添加账号" : "管理员还没有给你分配可用账号，请联系管理员") + '</div>';
+  accs.forEach(function(a){ html += quotaRowHtml(a, limit); });
+  html += '</div>';
+  html += '<div class="row" style="margin-top:16px">' +
+            '<button class="primary mini" id="btnAddRec">+ 记录下单</button>' +
+            '<button class="mini" id="btnBatchRec">粘贴录入</button>' +
+            (isAdmin() ? '<button class="mini" id="btnSetLimit">设置该货号额度</button>' : '') +
+          '</div>';
+  html += '<div id="qMine" style="margin-top:6px"></div>';
+  html += '</div>';
+  box.innerHTML = html;
+  document.getElementById("btnAddRec").addEventListener("click", function(){ openRecordModal({ product_id: pid }); });
+  document.getElementById("btnBatchRec").addEventListener("click", function(){ openRecordModal({ product_id: pid, batch: true }); });
+  if(isAdmin()){
+    document.getElementById("btnSetLimit").addEventListener("click", function(){ openLimitModal(pid, limit); });
+  }
+  loadQueryOrders(pid, limit);
+}
+function loadQueryOrders(pid, limit){
+  var box = document.getElementById("qMine");
+  if(!box) return;
+  api("list_orders", { month: state.month, product_id: pid }).then(function(d){
+    var rows = (d && d.orders) || [];
+    if(!rows.length){ box.innerHTML = '<div class="tiny muted" style="margin-top:14px">' + (isAdmin() ? "该货号本月暂无下单记录" : "你本月还没有记录该货号的下单") + '</div>'; return; }
+    var html = '<div class="tiny muted" style="margin:14px 0 6px">' + (isAdmin() ? "该货号本月下单明细（全部录入人）" : "我的下单记录") + '（' + rows.length + ' 条）</div>';
+    html += '<div class="tbl-wrap"><table><thead><tr><th>日期</th><th>账号</th><th>数量</th>' + (isAdmin() ? '<th>录入人</th>' : '') + '<th>备注</th><th style="width:110px">操作</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr><td>' + h(r.order_date) + '</td><td>' + h(r.account) + '</td><td><b>' + r.qty + '</b></td>' +
+        (isAdmin() ? '<td>' + h(r.created_by_name || "-") + '</td>' : '') +
+        '<td>' + h(r.note || "-") + '</td>' +
+        '<td><button class="mini" data-edit="' + r.id + '">编辑</button> <button class="mini danger" data-del="' + r.id + '">删除</button></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    box.innerHTML = html;
+    bindRowActions(box, rows, function(){ state.qdata = null; renderQuery(pid); });
+  }).catch(function(e){ if(e.message !== "AUTH") box.innerHTML = '<div class="tiny muted" style="margin-top:12px">明细加载失败：' + h(e.message) + '</div>'; });
+}
+function bindRowActions(container, rows, reload){
+  container.querySelectorAll("button[data-edit]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var r = rows.filter(function(x){ return String(x.id) === b.dataset.edit; })[0];
+      if(r) openRecordModal({ edit: r, product_id: r.product_id });
+    });
+  });
+  container.querySelectorAll("button[data-del]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var r = rows.filter(function(x){ return String(x.id) === b.dataset.del; })[0];
+      if(!r) return;
+      if(!confirm("确定删除这条记录？\n" + r.product_id + " · " + r.account + " · " + r.qty + " 单 · " + r.order_date + "\n删除后额度会相应释放。")) return;
+      api("delete_order", { id: r.id }).then(function(d){
+        if(d && d.ok === false){ toast(d.error || "删除失败"); return; }
+        toast("已删除");
+        reload();
+      }).catch(function(e){ if(e.message !== "AUTH") toast("删除失败：" + e.message); });
+    });
+  });
+}
+
+/* ================= 录入 / 编辑弹窗 ================= */
+function entryRowsEls(){
+  var box = document.getElementById("pList");
+  return box ? Array.prototype.slice.call(box.querySelectorAll(".entry-row[data-row]")) : [];
+}
+function entryReadRows(){
+  return entryRowsEls().map(function(r){
+    return { pid: r.querySelector("[data-pid]").value.trim(), qty: num(r.querySelector("[data-qty]").value) };
+  });
+}
+function entryCurAcc(){
+  var b = document.querySelector("#accChips .acc-chip.on");
+  return b ? b.dataset.acc : "";
+}
+function entryDate(){
+  var el = document.getElementById("fDate");
+  return (el && el.value) || todayStr();
+}
+function openRecordModal(opt){
+  opt = opt || {};
+  if(opt.edit){ openEditModal(opt.edit); return; }
+  var paste = !!opt.batch;
+  var initPid = (opt.product_id || "").trim();
+  var custOpts = "";
+  if(isAdmin()){
+    custOpts += '<option value="">（我自己）</option>';
+    (state.admin.customers || []).filter(function(c){ return c.enabled; }).forEach(function(c){
+      custOpts += '<option value="' + c.id + '">' + h(c.display_name || c.username) + '</option>';
+    });
+  }
+  var body =
+    '<div class="two">' +
+      '<div class="field"><label>下单日期</label><input id="fDate" type="date" value="' + h(todayStr()) + '"></div>' +
+      (isAdmin()
+        ? '<div class="field"><label>记录归属（可选）</label><select id="fOwner">' + custOpts + '</select></div>'
+        : '<div></div>') +
+    '</div>' +
+    '<div class="field"><label>平台账号 · 选择本次下单使用的账号</label><div id="accChips" class="acc-chips"><span class="tiny muted">加载中…</span></div></div>' +
+    '<div class="field" style="margin-bottom:12px"><div class="seg" id="mMode">' +
+      '<button type="button" data-mode="list" class="' + (paste ? "" : "on") + '">按账号录入</button>' +
+      '<button type="button" data-mode="paste" class="' + (paste ? "on" : "") + '">粘贴录入</button>' +
+    '</div></div>' +
+    '<div id="mList"' + (paste ? ' hidden' : '') + '>' +
+      '<div class="field"><label>货号明细 · 填数量，留空表示不下单</label>' +
+        '<div id="pList" class="entry-list"></div>' +
+        '<div class="row" style="justify-content:space-between;margin-top:8px">' +
+          '<button class="mini" type="button" id="pAdd">+ 添加一行</button>' +
+          '<span class="tiny muted" id="eSum"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="field"><label>备注（可选）</label><input id="fNote" placeholder="本次录入的统一备注，如：第3轮 / 店铺A"></div>' +
+      (isAdmin() ? '<div class="hint" style="margin:-6px 0 10px">「记录归属」选择客户时，可用账号按该客户的范围计算。</div>' : '') +
+      '<div class="hint" id="fHint"></div>' +
+    '</div>' +
+    '<div id="mBatch"' + (paste ? '' : ' hidden') + '>' +
+      '<div class="field"><label>录入内容</label><textarea id="bText" rows="8" placeholder="每行一条：货号 数量 [备注]&#10;例如：&#10;55555 5&#10;66666 3 第三轮"></textarea>' +
+        '<div class="hint">账号使用上方选择的平台账号；以空格 / 逗号 / 制表符分隔。</div></div>' +
+      (isAdmin() ? '<div class="hint">「记录归属」选择客户时，可用账号按该客户的范围计算。</div>' : '') +
+    '</div>' +
+    '<datalist id="pidList"></datalist>';
+
+  openModal("新增下单记录", body, '<button id="mCancel">取消</button><button id="mOk" class="primary">保存</button>');
+  document.getElementById("mCancel").addEventListener("click", closeModal);
+
+  var mode = paste ? "paste" : "list";
+  document.getElementById("mMode").addEventListener("click", function(e){
+    var b = e.target.closest("button[data-mode]");
+    if(!b) return;
+    mode = b.dataset.mode;
+    Array.prototype.forEach.call(document.querySelectorAll("#mMode button"), function(x){ x.classList.toggle("on", x.dataset.mode === mode); });
+    document.getElementById("mList").hidden = mode !== "list";
+    document.getElementById("mBatch").hidden = mode !== "paste";
+    if(mode === "list") focusFirstEmpty();
+    else { var t = document.getElementById("bText"); if(t) t.focus(); }
+  });
+  document.getElementById("mOk").addEventListener("click", function(){
+    if(mode === "paste") submitBatch();
+    else submitList();
+  });
+
+  /* ---------- 弹窗状态 ---------- */
+  var dateEl = document.getElementById("fDate");
+  var chipsEl = document.getElementById("accChips");
+  var listEl = document.getElementById("pList");
+  var hintEl = document.getElementById("fHint");
+  var sumEl = document.getElementById("eSum");
+  var tplEl = document.getElementById("pidList");
+  var accList = (state.accounts || []).map(function(a){ return a.account; });
+  var curAcc = accList[0] || "";
+  var usage = {}, limits = {}, defLimit = state.defaultLimit || 100;
+  var drafts = {};
+  var lastMonth = (dateEl.value || todayStr()).slice(0, 7);
+
+  function monthOf(){ return (dateEl.value || todayStr()).slice(0, 7); }
+  function limOf(pid){ var L = pid && limits[pid]; return (L && L > 0) ? L : defLimit; }
+  function readRows(){ return entryReadRows(); }
+  function saveDraft(){ if(curAcc) drafts[curAcc] = readRows(); }
+
+  /* ---------- 渲染 ---------- */
+  function paintChips(){
+    if(!accList.length){
+      chipsEl.innerHTML = '<span class="tiny muted">' + (isAdmin() ? "还没有平台账号，请到「账号与设置」添加" : "管理员还没有给你分配可用账号，请联系管理员") + '</span>';
+      return;
+    }
+    chipsEl.innerHTML = accList.map(function(a){
+      return '<button type="button" class="acc-chip' + (a === curAcc ? " on" : "") + '" data-acc="' + escAttr(a) + '">' + h(a) + '</button>';
+    }).join("");
+    Array.prototype.forEach.call(chipsEl.querySelectorAll(".acc-chip"), function(b){
+      b.addEventListener("click", function(){
+        if(b.dataset.acc === curAcc) return;
+        saveDraft();
+        curAcc = b.dataset.acc;
+        paintChips(); paintRows(); loadUsage();
+      });
+    });
+  }
+  function paintRows(){
+    if(!accList.length){
+      listEl.innerHTML = '<div class="empty" style="padding:20px"><b>还没有可用的平台账号</b>' + (isAdmin() ? "请到「账号与设置」添加账号" : "管理员还没有给你分配可用账号，请联系管理员") + '</div>';
+      sumEl.textContent = "";
+      if(hintEl) hintEl.textContent = "";
+      return;
+    }
+    if(!drafts[curAcc]){
+      drafts[curAcc] = [{ pid: initPid, qty: 0 }, { pid: "", qty: 0 }, { pid: "", qty: 0 }];
+    }
+    listEl.innerHTML = '<div class="entry-row entry-head"><span class="ep">货号（商品 ID）</span>' +
+        '<span class="eu">本月已下 / 剩余</span><span class="eq-h">本次下单</span><span class="ex"></span></div>' +
+      drafts[curAcc].map(function(r){
+        return '<div class="entry-row" data-row>' +
+          '<input class="ep" data-pid list="pidList" autocomplete="off" placeholder="输入货号" value="' + escAttr(r.pid || "") + '">' +
+          '<span class="eu tiny" data-usage></span>' +
+          '<input class="eq" data-qty type="number" min="0" step="1" inputmode="numeric" placeholder="0" value="' + (r.qty ? r.qty : "") + '">' +
+          '<button type="button" class="ex" data-rm title="删除该行">×</button>' +
+        '</div>';
+      }).join("");
+    bindRows();
+    refreshAll();
+  }
+  function bindRows(){
+    entryRowsEls().forEach(function(row){
+      var p = row.querySelector("[data-pid]"), q = row.querySelector("[data-qty]");
+      p.addEventListener("input", function(){ refreshAll(); saveDraft(); });
+      p.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); q.focus(); } });
+      q.addEventListener("input", function(){ markRow(row); syncSum(); saveDraft(); });
+      q.addEventListener("keydown", function(e){
+        if(e.key !== "Enter") return;
+        e.preventDefault();
+        var all = entryRowsEls(), i = all.indexOf(row);
+        if(i === all.length - 1) addRow(true);
+        else all[i + 1].querySelector("[data-pid]").focus();
+      });
+      row.querySelector("[data-rm]").addEventListener("click", function(){
+        var all = entryRowsEls();
+        if(all.length <= 1){ p.value = ""; q.value = ""; }
+        else row.parentNode.removeChild(row);
+        refreshAll(); saveDraft();
+      });
+    });
+  }
+  function addRow(focusIt){
+    var rows = readRows();
+    rows.push({ pid: "", qty: 0 });
+    drafts[curAcc] = rows;
+    paintRows();
+    if(focusIt){
+      var all = entryRowsEls();
+      var el = all.length ? all[all.length - 1].querySelector("[data-pid]") : null;
+      if(el) el.focus();
+    }
+  }
+  function focusFirstEmpty(){
+    var all = entryRowsEls();
+    for(var i = 0; i < all.length; i++){
+      var p = all[i].querySelector("[data-pid]");
+      if(!p.value.trim()){ p.focus(); return; }
+    }
+    var q = all[0] && all[0].querySelector("[data-qty]");
+    if(q) q.focus();
+  }
+  function markRow(row){
+    var pid = row.querySelector("[data-pid]").value.trim();
+    var q = num(row.querySelector("[data-qty]").value);
+    var u = (pid && usage[pid]) ? usage[pid].used : 0;
+    var lim = limOf(pid);
+    row.classList.toggle("has", q > 0 && !!pid);
+    row.classList.toggle("over", q > 0 && !!pid && u + q > lim);
+  }
+  function paintCell(row){
+    var pid = row.querySelector("[data-pid]").value.trim();
+    var el = row.querySelector("[data-usage]");
+    if(!pid){ el.innerHTML = '<span class="muted">—</span>'; return; }
+    var lim = limOf(pid);
+    if(!usage[pid]){ el.innerHTML = '<span class="muted">新货号 · 额度 ' + lim + '</span>'; return; }
+    var u = usage[pid].used, r = lim - u, t;
+    if(r < 0) t = '已下 <b>' + u + '</b> · <span class="v-bad">已超 ' + (-r) + '</span>';
+    else if(r === 0) t = '已下 <b>' + u + '</b> · <span class="v-bad">已用完</span>';
+    else {
+      t = '已下 <b>' + u + '</b> / 剩 <b>' + r + '</b>';
+      if(r <= Math.max(1, Math.ceil(lim * 0.1))) t += ' <span class="v-warn">快满了</span>';
+    }
+    el.innerHTML = t;
+  }
+  function refreshAll(){
+    var all = entryRowsEls(), counts = {};
+    all.forEach(function(row){
+      var p = row.querySelector("[data-pid]").value.trim();
+      if(p) counts[p] = (counts[p] || 0) + 1;
+    });
+    all.forEach(function(row){
+      var p = row.querySelector("[data-pid]").value.trim();
+      paintCell(row); markRow(row);
+      row.classList.toggle("dup", !!p && counts[p] > 1);
+    });
+    syncSum();
+  }
+  function syncSum(){
+    if(!sumEl) return;
+    var seen = {}, n = 0, s = 0, dup = false;
+    readRows().forEach(function(r){
+      if(!r.pid || r.qty <= 0) return;
+      if(seen[r.pid]) dup = true;
+      seen[r.pid] = 1; n++; s += r.qty;
+    });
+    if(!n){ sumEl.textContent = "给要下单的货号填数量，留空表示不下单"; return; }
+    sumEl.innerHTML = '已填 <b>' + n + '</b> 个货号 · 合计 <b class="v-blue">' + s + '</b> 单' +
+      (dup ? ' · <span class="v-warn">有重复货号，保存时自动合并</span>' : '');
+  }
+  function updHint(){
+    if(hintEl) hintEl.textContent = "将记入 " + monthLabel(monthOf()) + "（额度按自然月计算）；留空的货号不会写入。";
+  }
+
+  /* ---------- 数据加载 ---------- */
+  function loadUsage(){
+    var acc = curAcc, m = monthOf();
+    usage = {};
+    if(!acc){ refreshAll(); return; }
+    api("account_usage", { account: acc, month: m }).then(function(d){
+      if(curAcc !== acc || monthOf() !== m) return;
+      usage = (d && d.ok !== false && d.usage) ? d.usage : {};
+      if(d && d.default_limit) defLimit = d.default_limit;
+      refreshAll();
+    }).catch(function(e){
+      if(curAcc !== acc || monthOf() !== m) return;
+      if(e.message !== "AUTH") toast("额度信息加载失败：" + e.message);
+      refreshAll();
+    });
+  }
+  function loadMeta(){
+    api("product_ids", {}).then(function(d){
+      var list = (d && d.product_ids) || [];
+      tplEl.innerHTML = list.map(function(p){ return '<option value="' + h(p) + '"></option>'; }).join("");
+    }).catch(function(){});
+    rpcCall("fn_limits", { p_token: state.token }).then(function(d){
+      if(d && d.ok !== false){
+        limits = d.limits || {};
+        if(d.default_limit) defLimit = d.default_limit;
+        refreshAll();
+      }
+    }).catch(function(){});
+  }
+  function loadAccounts(createdBy){
+    var prev = curAcc;
+    api("accounts", { created_by: createdBy || null }).then(function(d){
+      accList = ((d && d.accounts) || []).map(function(a){ return a.account; });
+      curAcc = accList.indexOf(prev) >= 0 ? prev : (accList[0] || "");
+      paintChips(); paintRows(); loadUsage();
+    }).catch(function(e){ if(e.message !== "AUTH") toast("账号加载失败：" + e.message); });
+  }
+
+  /* ---------- 事件 ---------- */
+  document.getElementById("pAdd").addEventListener("click", function(){ addRow(true); });
+  dateEl.addEventListener("change", function(){
+    updHint(); saveDraft();
+    if(monthOf() !== lastMonth){ lastMonth = monthOf(); loadUsage(); }
+  });
+  var ownerEl = document.getElementById("fOwner");
+  if(ownerEl) ownerEl.addEventListener("change", function(){ saveDraft(); loadAccounts(ownerEl.value); });
+
+  /* ---------- 初始化 ---------- */
+  paintChips();
+  paintRows();
+  updHint();
+  loadMeta();
+  loadUsage();
+  if(!accList.length) toast(isAdmin() ? "还没有平台账号，请先到「账号与设置」添加" : "管理员还没有给你分配可用账号");
+  setTimeout(function(){
+    if(mode === "list") focusFirstEmpty();
+    else { var t = document.getElementById("bText"); if(t) t.focus(); }
+  }, 60);
+}
+function openEditModal(r){
+  var names = (state.accounts || []).map(function(a){ return a.account; });
+  var accOpts = "";
+  if(names.indexOf(r.account) < 0) accOpts += '<option value="' + escAttr(r.account) + '" selected>' + h(r.account) + '</option>';
+  accOpts += (state.accounts || []).map(function(a){
+    return '<option value="' + escAttr(a.account) + '"' + (a.account === r.account ? " selected" : "") + '>' + h(a.account) + '</option>';
+  }).join("");
+  openModal("编辑下单记录",
+    '<div class="two">' +
+      '<div class="field"><label>货号（商品 ID）</label><input id="fPidE" value="' + h(r.product_id) + '" autocomplete="off"></div>' +
+      '<div class="field"><label>平台账号</label><select id="fAcc">' + accOpts + '</select></div>' +
+    '</div>' +
+    '<div class="two">' +
+      '<div class="field"><label>下单数量</label><input id="fQty" type="number" min="1" step="1" value="' + h(r.qty) + '"></div>' +
+      '<div class="field"><label>下单日期</label><input id="fDate" type="date" value="' + h(r.order_date || todayStr()) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label>备注（可选）</label><input id="fNote" value="' + h(r.note || "") + '"></div>' +
+    '<div class="hint" id="fHint"></div>',
+    '<button id="mCancel">取消</button><button id="mOk" class="primary">保存修改</button>');
+  document.getElementById("mCancel").addEventListener("click", closeModal);
+  document.getElementById("mOk").addEventListener("click", function(){ submitEdit(r); });
+  var dateEl = document.getElementById("fDate"), hintEl = document.getElementById("fHint");
+  var upd = function(){ hintEl.textContent = "将记入 " + monthLabel((dateEl.value || todayStr()).slice(0, 7)) + "（额度按自然月计算）"; };
+  dateEl.addEventListener("change", upd); upd();
+  setTimeout(function(){ var e = document.getElementById("fPidE"); if(e) e.focus(); }, 60);
+}
+function submitList(){
+  var acc = entryCurAcc();
+  if(!acc){ toast("请先选择平台账号"); return; }
+  var date = entryDate();
+  var noteEl = document.getElementById("fNote");
+  var note = noteEl ? noteEl.value.trim() : "";
+  var items = [], noPid = [];
+  entryReadRows().forEach(function(r, i){
+    if(r.qty > 0){
+      if(!r.pid){ noPid.push(i + 1); return; }
+      items.push({ product_id: r.pid, account: acc, qty: r.qty, note: note });
+    }
+  });
+  if(noPid.length){ toast("第 " + noPid.join("、") + " 行填了数量但没有货号"); return; }
+  if(!items.length){ toast("请至少填写一个货号的下单数量"); return; }
+  var merged = {}, order = [];
+  items.forEach(function(x){
+    if(!merged[x.product_id]){ merged[x.product_id] = x; order.push(x.product_id); }
+    else merged[x.product_id].qty += x.qty;
+  });
+  saveOrders(date, order.map(function(p){ return merged[p]; }), ownerOf("fOwner"));
+}
+function submitBatch(){
+  var acc = entryCurAcc();
+  if(!acc){ toast("请先选择平台账号"); return; }
+  var date = entryDate();
+  var text = document.getElementById("bText").value;
+  if(!text.trim()){ toast("请输入要导入的内容"); return; }
+  var items = [], bad = [];
+  text.split(/\r?\n/).forEach(function(line, i){
+    var s = line.trim();
+    if(!s) return;
+    var p = s.split(/[\s,，\t]+/);
+    if(!p[0] || !num(p[1])){ bad.push(i + 1); return; }
+    items.push({ product_id: p[0], account: acc, qty: num(p[1]), note: p.slice(2).join(" ") });
+  });
+  if(!items.length){ toast(bad.length ? ("第 " + bad.join("/") + " 行格式有误") : "没有可导入的内容"); return; }
+  if(bad.length && !confirm("第 " + bad.join("、") + " 行格式有误，将被跳过。是否继续？")) return;
+  saveOrders(date, items, ownerOf("fOwner"));
+}
+function ownerOf(id){
+  var el = document.getElementById(id);
+  return el && el.value ? el.value : "";
+}
+function saveOrders(date, items, owner, allowOver){
+  var btn = document.getElementById("mOk");
+  btn.disabled = true; btn.textContent = "保存中…";
+  api("add_orders", { date: date, items: items, created_by: owner || null, allow_over: !!allowOver })
+    .then(function(d){
+      if(d && d.ok === false){
+        btn.disabled = false; btn.textContent = "保存";
+        if(d.code === "QUOTA"){
+          if(confirm(d.error + "\n\n是否继续保存（将超出额度）？")) saveOrders(date, items, owner, true);
+          return;
+        }
+        toast(d.error || "保存失败");
+        return;
+      }
+      closeModal();
+      var sum = items.reduce(function(t, x){ return t + x.qty; }, 0);
+      toast("已记录 " + items.length + " 条 · 合计 " + sum + " 单");
+      afterWrite();
+    }).catch(function(e){
+      btn.disabled = false; btn.textContent = "保存";
+      if(e.message !== "AUTH") toast("保存失败：" + e.message);
+    });
+}
+function submitEdit(r){
+  var pid = document.getElementById("fPidE").value.trim();
+  var qty = num(document.getElementById("fQty").value);
+  var date = document.getElementById("fDate").value || todayStr();
+  var acc = document.getElementById("fAcc").value;
+  var note = document.getElementById("fNote").value;
+  if(!pid){ toast("请输入货号"); return; }
+  if(!acc){ toast("请选择平台账号"); return; }
+  if(qty <= 0){ toast("下单数量必须大于 0"); return; }
+  var btn = document.getElementById("mOk");
+  btn.disabled = true; btn.textContent = "保存中…";
+  function send(over){
+    return api("update_order", { id: r.id, product_id: pid, account: acc, qty: qty, date: date, note: note, allow_over: !!over });
+  }
+  send(false).then(function(d){
+    if(d && d.ok === false){
+      btn.disabled = false; btn.textContent = "保存修改";
+      if(d.code === "QUOTA"){
+        if(confirm(d.error + "\n\n是否继续保存（将超出额度）？")){
+          send(true).then(function(){ closeModal(); toast("已更新"); afterWrite(); })
+            .catch(function(e){ if(e.message !== "AUTH") toast("更新失败：" + e.message); });
+        }
+        return;
+      }
+      toast(d.error || "更新失败");
+      return;
+    }
+    closeModal(); toast("已更新");
+    afterWrite();
+  }).catch(function(e){
+    btn.disabled = false; btn.textContent = "保存修改";
+    if(e.message !== "AUTH") toast("更新失败：" + e.message);
+  });
+}
+function afterWrite(){
+  state.months = [];
+  api("months").then(function(d){ state.months = (d && d.months) || []; }).catch(function(){});
+  if(state.tab === "query" && state.query){ state.qdata = null; renderQuery(state.query); }
+  else renderTab();
+}
+
+/* ================= 明细页（我的 / 全部） ================= */
+function renderOrders(scope){
+  var isAll = scope === "all";
+  var f = state.filters;
+  var monthOpts = '<option value="__cur__">当前月份（' + monthLabel(state.month) + '）</option><option value="__all">全部月份</option>';
+  state.months.forEach(function(m){ monthOpts += '<option value="' + h(m) + '">' + monthLabel(m) + '</option>'; });
+  var custOpts = "";
+  if(isAdmin()){
+    custOpts = '<option value="">全部录入人</option>';
+    state.admin.customers.forEach(function(c){
+      custOpts += '<option value="' + c.id + '">' + h(c.display_name || c.username) + '</option>';
+    });
+  }
+  renderShell(
+    '<div class="card">' +
+      '<h2>' + (isAll ? "下单明细（全部客户）" : "我的下单记录") + '</h2>' +
+      '<p class="desc">' + (isAll ? "可查看并修改、删除任意客户的记录。" : "这里只显示你自己录入的记录，可修改或删除。") + '</p>' +
+      '<div class="filters">' +
+        '<select id="fMonth">' + monthOpts + '</select>' +
+        '<input id="fProduct" placeholder="按货号筛选" value="' + h(f.product) + '">' +
+        '<input id="fAccount" placeholder="按账号筛选" value="' + h(f.account) + '">' +
+        (isAdmin() ? '<select id="fCustomer">' + custOpts + '</select>' : '') +
+        '<span class="spacer"></span>' +
+        '<button id="btnExport" class="mini">导出 CSV</button>' +
+        '<button id="btnAdd" class="primary mini">+ 新增记录</button>' +
+      '</div>' +
+      '<div id="ordersBox"><div class="loading">加载中…</div></div>' +
+      '<div id="ordersFoot" class="tiny muted" style="margin-top:10px"></div>' +
+    '</div>'
+  );
+  document.getElementById("fMonth").value = f.month;
+  document.getElementById("fMonth").addEventListener("change", function(e){ state.filters.month = e.target.value; loadOrders(scope); });
+  document.getElementById("fProduct").addEventListener("input", function(e){ state.filters.product = e.target.value; loadOrders(scope); });
+  document.getElementById("fAccount").addEventListener("input", function(e){ state.filters.account = e.target.value; loadOrders(scope); });
+  if(isAdmin()) document.getElementById("fCustomer").addEventListener("change", function(e){ state.filters.created_by = e.target.value; loadOrders(scope); });
+  if(isAdmin()) document.getElementById("fCustomer").value = f.created_by || "";
+  document.getElementById("btnAdd").addEventListener("click", function(){ openRecordModal({}); });
+  document.getElementById("btnExport").addEventListener("click", function(){ exportCsv(state.orders); });
+  loadOrders(scope);
+}
+function loadOrders(scope){
+  var box = document.getElementById("ordersBox");
+  if(!box) return;
+  var f = state.filters;
+  var month = f.month === "__cur__" ? state.month : (f.month === "__all" ? "all" : f.month);
+  api("list_orders", { month: month, product_id: f.product.trim(), account: f.account.trim(), created_by: f.created_by || "" })
+    .then(function(d){
+      var rows = (d && d.orders) || [];
+      state.orders = rows;
+      if(!rows.length){
+        box.innerHTML = '<div class="empty"><b>没有符合条件的记录</b>换个筛选条件，或点击「+ 新增记录」开始录入</div>';
+        document.getElementById("ordersFoot").textContent = "";
+        return;
+      }
+      var isAll = scope === "all";
+      var html = '<div class="tbl-wrap"><table><thead><tr><th>月份</th><th>货号</th><th>账号</th><th>下单数</th><th>日期</th>' +
+        (isAll ? '<th>录入人</th>' : '') + '<th>备注</th><th style="width:110px">操作</th></tr></thead><tbody>';
+      rows.forEach(function(r){
+        html += '<tr><td>' + monthLabel(r.month) + '</td><td><b>' + h(r.product_id) + '</b></td><td>' + h(r.account) + '</td>' +
+          '<td><b>' + r.qty + '</b></td><td>' + h(r.order_date) + '</td>' +
+          (isAll ? '<td>' + h(r.created_by_name || "-") + '</td>' : '') +
+          '<td>' + h(r.note || "-") + '</td>' +
+          '<td><button class="mini" data-edit="' + r.id + '">编辑</button> <button class="mini danger" data-del="' + r.id + '">删除</button></td></tr>';
+      });
+      html += '</tbody></table></div>';
+      box.innerHTML = html;
+      var sum = rows.reduce(function(t,x){ return t + x.qty; }, 0);
+      var pidSet = {}, accSet = {};
+      rows.forEach(function(r){ pidSet[r.product_id] = 1; accSet[r.account] = 1; });
+      document.getElementById("ordersFoot").textContent = "共 " + rows.length + " 条 · 合计 " + sum + " 单 · 涉及 " + Object.keys(pidSet).length + " 个货号 · " + Object.keys(accSet).length + " 个账号";
+      bindRowActions(box, rows, function(){ loadOrders(scope); });
+    }).catch(function(e){
+      if(e.message !== "AUTH") box.innerHTML = '<div class="empty">加载失败：' + h(e.message) + '</div>';
+    });
+}
+function csvCell(v){ var s = String(v == null ? "" : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; }
+function exportCsv(rows){
+  if(!rows || !rows.length){ toast("当前列表为空，无法导出"); return; }
+  var head = ["月份","货号","账号","下单数","下单日期","备注"];
+  if(isAdmin()) head.push("录入人");
+  var lines = [head.join(",")];
+  rows.forEach(function(r){
+    var arr = [r.month, r.product_id, r.account, r.qty, r.order_date, r.note || ""];
+    if(isAdmin()) arr.push(r.created_by_name || "");
+    lines.push(arr.map(csvCell).join(","));
+  });
+  var blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "下单明细_" + todayStr() + ".csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+  toast("CSV 已导出（" + rows.length + " 条）");
+}
+
+/* ================= 当月总览 ================= */
+function renderOverview(){
+  renderShell('<div class="card" id="ovCard"><div class="loading">加载中…</div></div>');
+  api("overview", { month: state.month }).then(function(d){
+    var items = (d && d.items) || [];
+    var totalOrders = 0, combos = 0, fullCnt = 0, warnCnt = 0;
+    items.forEach(function(it){
+      totalOrders += it.total || 0;
+      var limit = it.limit || state.defaultLimit;
+      (it.rows || []).forEach(function(x){
+        combos++;
+        var s = statusCls(x.used, limit);
+        if(s === "bad" || s === "full") fullCnt++; else if(s === "warn") warnCnt++;
+      });
+    });
+    var html = '<div class="stat-grid">' +
+      '<div class="stat"><div class="k">' + monthLabel(state.month) + ' 合计下单</div><div class="v v-blue">' + totalOrders + '</div></div>' +
+      '<div class="stat"><div class="k">涉及货号</div><div class="v">' + items.length + '</div></div>' +
+      '<div class="stat"><div class="k">账号×货号组合</div><div class="v">' + combos + '</div></div>' +
+      '<div class="stat"><div class="k">额度已用完组合</div><div class="v ' + (fullCnt ? "v-bad" : "") + '">' + fullCnt + '</div></div>' +
+      '<div class="stat"><div class="k">额度紧张（≥90%）</div><div class="v ' + (warnCnt ? "v-warn" : "") + '">' + warnCnt + '</div></div>' +
+    '</div>';
+    html += '<div class="card"><h2>各货号额度使用情况</h2><p class="desc">' +
+      (isAdmin() ? "展示全部客户的用量（额度按平台账号共享计算）。" : "展示共享账号的已用量，不含其他客户明细。") +
+      '</p>';
+    if(!items.length){
+      html += '<div class="empty"><b>' + monthLabel(state.month) + ' 还没有下单记录</b>到「查单 / 记单」录入后，这里会显示每个货号的额度使用情况</div>';
+    } else {
+      html += '<div class="plist">';
+      items.forEach(function(it){
+        var limit = it.limit || state.defaultLimit;
+        var rows = (it.rows || []).slice().sort(function(a,b){ return (limit - a.used) - (limit - b.used); });
+        var minRemain = rows.length ? (limit - rows[0].used) : limit;
+        var cls = minRemain <= 0 ? "bad" : (minRemain <= limit * 0.1 ? "warn" : "");
+        var badge = minRemain <= 0 ? '<span class="badge b-bad">有账号额度用完</span>'
+          : (cls === "warn" ? '<span class="badge b-warn">有账号额度紧张</span>' : '<span class="badge b-ok">额度充足</span>');
+        html += '<div class="pitem ' + cls + '">' +
+          '<div class="pitem-head"><div class="row" style="gap:9px"><span class="pid-sm">' + h(it.product_id) + '</span>' + badge + '</div>' +
+          '<div class="tiny muted">合计 ' + it.total + ' 单 · ' + rows.length + ' 个账号 · 每账号额度 ' + limit + '</div></div>' +
+          '<div class="acc-quota" style="margin-top:10px">';
+        rows.forEach(function(x){ html += quotaRowHtml(x, limit); });
+        html += '</div><div class="row" style="margin-top:10px"><button class="mini" data-goto="' + escAttr(it.product_id) + '">查看与记单</button></div></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+    document.getElementById("ovCard").outerHTML = html;
+    document.querySelectorAll("button[data-goto]").forEach(function(b){
+      b.addEventListener("click", function(){
+        state.query = b.dataset.goto;
+        state.qdata = null;
+        state.tab = "query";
+        renderTab();
+      });
+    });
+  }).catch(function(e){
+    if(e.message !== "AUTH") document.getElementById("ovCard").innerHTML = "加载失败：" + h(e.message);
+  });
+}
+
+/* ================= 我的账号（客户） ================= */
+function renderAccount(){
+  renderShell(
+    '<div class="card">' +
+      '<h2>我的账号</h2>' +
+      '<p class="desc">账号信息与登录密码管理</p>' +
+      '<div class="list-item"><span class="nm">登录账号</span><b>' + h(state.user.username) + '</b></div>' +
+      '<div class="list-item"><span class="nm">显示名称</span><b>' + h(state.user.display_name) + '</b></div>' +
+      '<div class="list-item"><span class="nm">角色</span><b>客户</b></div>' +
+      '<div class="list-item"><span class="nm">当前额度规则</span><span class="tiny muted">每个账号每个货号每月 ' + state.defaultLimit + ' 单</span></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>修改密码</h2><p class="desc">修改后其他设备需要重新登录</p>' +
+      '<div class="field"><label>原密码</label><input id="oldPw" type="password" placeholder="请输入原密码"></div>' +
+      '<div class="field"><label>新密码</label><input id="newPw" type="password" placeholder="至少 6 位"></div>' +
+      '<button id="btnPw" class="primary">保存修改</button>' +
+    '</div>'
+  );
+  document.getElementById("btnPw").addEventListener("click", function(){
+    var o = document.getElementById("oldPw").value, n = document.getElementById("newPw").value;
+    if(!o || !n){ toast("请填写原密码和新密码"); return; }
+    if(n.length < 6){ toast("新密码至少 6 位"); return; }
+    var b = document.getElementById("btnPw"); b.disabled = true; b.textContent = "保存中…";
+    api("change_password", { old_password: o, new_password: n }).then(function(d){
+      b.disabled = false; b.textContent = "保存修改";
+      if(d && d.ok === false){ toast(d.error || "修改失败"); return; }
+      toast("密码已修改");
+      document.getElementById("oldPw").value = ""; document.getElementById("newPw").value = "";
+    }).catch(function(e){ b.disabled = false; b.textContent = "保存修改"; if(e.message !== "AUTH") toast("修改失败：" + e.message); });
+  });
+}
+
+/* ================= 管理员：账号与设置 ================= */
+function renderSettings(){
+  renderShell(
+    '<div class="card"><h2>平台账号池</h2><p class="desc">所有客户共享这些账号下单；额度按「账号 × 货号 × 月份」计算。</p>' +
+      '<div class="row" style="margin-bottom:12px">' +
+        '<input id="accNew" placeholder="输入平台账号，如 wy001" style="max-width:260px">' +
+        '<input id="accRemark" placeholder="备注（可选）" style="max-width:180px">' +
+        '<button id="accAddBtn" class="primary" style="flex:none">添加账号</button>' +
+      '</div><div id="accListBox"><div class="loading">加载中…</div></div></div>' +
+
+    '<div class="card"><h2>客户管理</h2><p class="desc">新建客户后，把「登录账号 + 密码」告知客户即可使用；可随时重置密码、停用，或点击「可用账号」限制该客户能使用哪些平台账号。</p>' +
+      '<div class="row" style="margin-bottom:12px">' +
+        '<input id="cusName" placeholder="登录账号（英文/数字）" style="max-width:200px">' +
+        '<input id="cusPw" placeholder="初始密码（≥6位）" style="max-width:180px">' +
+        '<input id="cusDisplay" placeholder="客户名称（如：张三）" style="max-width:180px">' +
+        '<button id="cusAddBtn" class="primary" style="flex:none">新建客户</button>' +
+      '</div><div id="cusListBox"><div class="loading">加载中…</div></div></div>' +
+
+    '<div class="card"><h2>货号额度</h2><p class="desc">默认每个账号、每个货号、每月 ' + state.admin.defaultLimit + ' 单；可为个别货号单独设置。</p>' +
+      '<div class="row" style="margin-bottom:14px">' +
+        '<div style="flex:none;width:190px" class="tiny muted">默认额度（每账号每月/单）</div>' +
+        '<input id="defLimit" type="number" min="1" step="1" value="' + state.admin.defaultLimit + '" style="width:110px">' +
+        '<button id="defLimitBtn" class="mini">保存</button>' +
+      '</div>' +
+      '<div class="row" style="margin-bottom:14px">' +
+        '<input id="limPid" placeholder="货号（商品 ID）" style="max-width:220px">' +
+        '<input id="limVal" type="number" min="1" step="1" placeholder="额度" style="width:110px;flex:none">' +
+        '<button id="limSetBtn" class="primary" style="flex:none">设置</button>' +
+      '</div><div id="limListBox"><div class="loading">加载中…</div></div></div>' +
+
+    '<div class="card"><h2>数据导出</h2><p class="desc">导出全部下单记录为 CSV（可用 Excel 打开）</p>' +
+      '<div class="row"><button id="expMonth" >导出本月</button><button id="expAll">导出全部月份</button></div></div>'
+  );
+  document.getElementById("accAddBtn").addEventListener("click", function(){
+    var a = document.getElementById("accNew").value.trim();
+    var rm = document.getElementById("accRemark").value.trim();
+    if(!a){ toast("请输入平台账号"); return; }
+    adminApi("save_account", { account: a, remark: rm, enabled: true }).then(function(d){
+      if(d && d.ok === false){ toast(d.error || "添加失败"); return; }
+      document.getElementById("accNew").value = ""; document.getElementById("accRemark").value = "";
+      toast("已添加账号 " + a);
+      refreshAccounts(); loadSettingsLists();
+    }).catch(function(e){ if(e.message !== "AUTH") toast("添加失败：" + e.message); });
+  });
+  document.getElementById("cusAddBtn").addEventListener("click", function(){
+    var u = document.getElementById("cusName").value.trim();
+    var p = document.getElementById("cusPw").value;
+    var dn = document.getElementById("cusDisplay").value.trim();
+    if(!u){ toast("请输入登录账号"); return; }
+    if(p.length < 6){ toast("初始密码至少 6 位"); return; }
+    adminApi("create_customer", { username: u, password: p, display_name: dn, role: "customer" }).then(function(d){
+      if(d && d.ok === false){ toast(d.error || "创建失败"); return; }
+      document.getElementById("cusName").value = ""; document.getElementById("cusPw").value = ""; document.getElementById("cusDisplay").value = "";
+      toast("已创建客户 " + u);
+      loadSettingsLists();
+    }).catch(function(e){ if(e.message !== "AUTH") toast("创建失败：" + e.message); });
+  });
+  document.getElementById("defLimitBtn").addEventListener("click", function(){
+    var v = num(document.getElementById("defLimit").value);
+    if(v <= 0){ toast("请输入大于 0 的额度"); return; }
+    adminApi("set_default_limit", { limit: v }).then(function(d){
+      if(d && d.ok === false){ toast(d.error || "保存失败"); return; }
+      state.defaultLimit = v; state.admin.defaultLimit = v;
+      toast("默认额度已设为每账号每月 " + v + " 单");
+      renderTab();
+    }).catch(function(e){ if(e.message !== "AUTH") toast("保存失败：" + e.message); });
+  });
+  document.getElementById("limSetBtn").addEventListener("click", function(){
+    var pid = document.getElementById("limPid").value.trim();
+    var v = num(document.getElementById("limVal").value);
+    if(!pid){ toast("请输入货号"); return; }
+    if(v <= 0){ toast("请输入大于 0 的额度"); return; }
+    adminApi("set_limit", { product_id: pid, limit: v }).then(function(d){
+      if(d && d.ok === false){ toast(d.error || "设置失败"); return; }
+      document.getElementById("limPid").value = ""; document.getElementById("limVal").value = "";
+      toast("已设置 " + pid + " 每账号 " + v + " 单/月");
+      loadSettingsLists();
+    }).catch(function(e){ if(e.message !== "AUTH") toast("设置失败：" + e.message); });
+  });
+  document.getElementById("expMonth").addEventListener("click", function(){
+    api("list_orders", { month: state.month }).then(function(d){ exportCsv((d && d.orders) || []); });
+  });
+  document.getElementById("expAll").addEventListener("click", function(){
+    api("list_orders", { month: "all" }).then(function(d){ exportCsv((d && d.orders) || []); });
+  });
+  loadSettingsLists();
+}
+function refreshAccounts(){
+  api("accounts").then(function(d){ state.accounts = (d && d.accounts) || []; }).catch(function(){});
+}
+function loadSettingsLists(){
+  adminApi("list_accounts", {}).then(function(d){
+    var box = document.getElementById("accListBox");
+    if(!box) return;
+    var rows = (d && d.accounts) || [];
+    if(!rows.length){ box.innerHTML = '<div class="empty" style="padding:18px"><b>还没有平台账号</b>添加上账号后，客户才能用它下单</div>'; return; }
+    var html = "";
+    rows.forEach(function(a){
+      html += '<div class="list-item">' +
+        '<span class="nm"><b>' + h(a.account) + '</b>' + (a.remark ? ' <span class="tiny muted">' + h(a.remark) + '</span>' : '') + '</span>' +
+        '<span class="tiny muted">本月已下 ' + (a.month_qty || 0) + ' 单' + (a.customer_cnt ? ' · ' + a.customer_cnt + ' 个客户限定可用' : '') + '</span>' +
+        '<span class="badge ' + (a.enabled ? "b-ok" : "b-gray") + '">' + (a.enabled ? "启用中" : "已停用") + '</span>' +
+        '<button class="mini" data-acc-toggle="' + a.id + '" data-enabled="' + (a.enabled ? "1" : "0") + '" data-name="' + escAttr(a.account) + '">' + (a.enabled ? "停用" : "启用") + '</button>' +
+        '<button class="mini danger" data-acc-del="' + a.id + '" data-name="' + escAttr(a.account) + '">删除</button>' +
+      '</div>';
+    });
+    box.innerHTML = html;
+    box.querySelectorAll("button[data-acc-toggle]").forEach(function(b){
+      b.addEventListener("click", function(){
+        adminApi("save_account", { id: Number(b.dataset.accToggle), enabled: b.dataset.enabled !== "1" }).then(function(r){
+          if(r && r.ok === false){ toast(r.error || "操作失败"); return; }
+          toast("已更新"); refreshAccounts(); loadSettingsLists();
+        }).catch(function(e){ if(e.message !== "AUTH") toast("操作失败：" + e.message); });
+      });
+    });
+    box.querySelectorAll("button[data-acc-del]").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(!confirm("确定删除平台账号「" + b.dataset.name + "」？\n若该账号已有下单记录，将无法删除（可改为停用）。")) return;
+        adminApi("delete_account", { id: Number(b.dataset.accDel) }).then(function(r){
+          if(r && r.ok === false){ toast(r.error || "删除失败"); return; }
+          toast("已删除"); refreshAccounts(); loadSettingsLists();
+        }).catch(function(e){ if(e.message !== "AUTH") toast("删除失败：" + e.message); });
+      });
+    });
+  }).catch(function(e){ if(e.message !== "AUTH") document.getElementById("accListBox").innerHTML = "加载失败：" + h(e.message); });
+
+  adminApi("list_customers", {}).then(function(d){
+    var box = document.getElementById("cusListBox");
+    if(!box) return;
+    state.admin.customers = (d && d.customers) || [];
+    var rows = state.admin.customers;
+    if(!rows.length){ box.innerHTML = '<div class="empty" style="padding:18px"><b>还没有客户</b>新建客户后即可分配账号密码</div>'; return; }
+    var html = "";
+    rows.forEach(function(c){
+      var isAdm = c.role === "admin";
+      var scopeBadge = isAdm
+        ? '<span class="badge b-gray">全部账号</span>'
+        : (c.account_scope === "assigned"
+            ? '<span class="badge b-blue">指定 ' + (c.assigned_cnt || 0) + ' 个账号</span>'
+            : '<span class="badge b-gray">全部账号</span>');
+      html += '<div class="list-item">' +
+        '<span class="nm"><b>' + h(c.display_name || c.username) + '</b> <span class="tiny muted">(' + h(c.username) + ')</span>' +
+          (isAdm ? ' <span class="badge b-gray">管理员</span>' : '') + '</span>' +
+        '<span class="tiny muted">本月 ' + (c.month_cnt || 0) + ' 条 / ' + (c.month_qty || 0) + ' 单 · 累计 ' + (c.total_cnt || 0) + ' 条</span>' +
+        '<span class="tiny muted">最近登录：' + h(c.last_login_at || "从未") + '</span>' +
+        scopeBadge +
+        '<span class="badge ' + (c.enabled ? "b-ok" : "b-gray") + '">' + (c.enabled ? "正常" : "已停用") + '</span>' +
+        (isAdm ? '' : '<button class="mini" data-cus-scope="' + c.id + '">可用账号</button>') +
+        '<button class="mini" data-cus-pw="' + c.id + '" data-name="' + escAttr(c.username) + '">重置密码</button>' +
+        '<button class="mini" data-cus-toggle="' + c.id + '" data-enabled="' + (c.enabled ? "1" : "0") + '" data-name="' + escAttr(c.username) + '">' + (c.enabled ? "停用" : "启用") + '</button>' +
+        '<button class="mini danger" data-cus-del="' + c.id + '" data-name="' + escAttr(c.username) + '">删除</button>' +
+      '</div>';
+    });
+    box.innerHTML = html;
+    box.querySelectorAll("button[data-cus-scope]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var c = rows.filter(function(x){ return String(x.id) === b.dataset.cusScope; })[0];
+        if(c) openScopeModal(c);
+      });
+    });
+    box.querySelectorAll("button[data-cus-pw]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var np = prompt("为「" + b.dataset.name + "」设置新密码（至少 6 位）：", "");
+        if(np === null) return;
+        if(np.length < 6){ toast("密码至少 6 位"); return; }
+        adminApi("update_customer", { id: Number(b.dataset.cusPw), password: np }).then(function(r){
+          if(r && r.ok === false){ toast(r.error || "重置失败"); return; }
+          toast("密码已重置，请告知客户新密码");
+        }).catch(function(e){ if(e.message !== "AUTH") toast("重置失败：" + e.message); });
+      });
+    });
+    box.querySelectorAll("button[data-cus-toggle]").forEach(function(b){
+      b.addEventListener("click", function(){
+        adminApi("update_customer", { id: Number(b.dataset.cusToggle), enabled: b.dataset.enabled !== "1" }).then(function(r){
+          if(r && r.ok === false){ toast(r.error || "操作失败"); return; }
+          toast("已更新"); loadSettingsLists();
+        }).catch(function(e){ if(e.message !== "AUTH") toast("操作失败：" + e.message); });
+      });
+    });
+    box.querySelectorAll("button[data-cus-del]").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(!confirm("确定删除客户「" + b.dataset.name + "」？\n若该客户已录入下单记录，将无法删除（可改为停用）。")) return;
+        adminApi("delete_customer", { id: Number(b.dataset.cusDel) }).then(function(r){
+          if(r && r.ok === false){ toast(r.error || "删除失败"); return; }
+          toast("已删除"); loadSettingsLists();
+        }).catch(function(e){ if(e.message !== "AUTH") toast("删除失败：" + e.message); });
+      });
+    });
+  }).catch(function(e){ if(e.message !== "AUTH") document.getElementById("cusListBox").innerHTML = "加载失败：" + h(e.message); });
+
+  adminApi("list_limits", {}).then(function(d){
+    var box = document.getElementById("limListBox");
+    if(!box) return;
+    var rows = (d && d.limits) || [];
+    if(!rows.length){ box.innerHTML = '<div class="tiny muted">暂无单独设置的货号，全部按默认额度计算。</div>'; return; }
+    var html = "";
+    rows.forEach(function(x){
+      html += '<div class="list-item"><span class="nm"><b>' + h(x.product_id) + '</b></span>' +
+        '<span class="tiny muted">每账号 ' + x.limit + ' 单/月</span>' +
+        '<button class="mini danger" data-lim-del="' + escAttr(x.product_id) + '">移除</button></div>';
+    });
+    box.innerHTML = html;
+    box.querySelectorAll("button[data-lim-del]").forEach(function(b){
+      b.addEventListener("click", function(){
+        adminApi("delete_limit", { product_id: b.dataset.limDel }).then(function(){
+          toast("已移除，恢复默认额度"); loadSettingsLists();
+        }).catch(function(e){ if(e.message !== "AUTH") toast("操作失败：" + e.message); });
+      });
+    });
+  }).catch(function(e){ if(e.message !== "AUTH") document.getElementById("limListBox").innerHTML = "加载失败：" + h(e.message); });
+}
+function openLimitModal(pid, cur){
+  openModal("设置货号额度",
+    '<div class="field"><label>货号</label><input id="lPid" value="' + h(pid) + '" readonly></div>' +
+    '<div class="field"><label>每账号每月额度（单）</label><input id="lVal" type="number" min="1" step="1" value="' + cur + '"></div>' +
+    '<div class="hint">该额度按「平台账号 × 货号 × 自然月」计算</div>',
+    '<button id="mCancel">取消</button><button id="mOk" class="primary">保存</button>');
+  document.getElementById("mCancel").addEventListener("click", closeModal);
+  document.getElementById("mOk").addEventListener("click", function(){
+    var v = num(document.getElementById("lVal").value);
+    if(v <= 0){ toast("请输入大于 0 的额度"); return; }
+    adminApi("set_limit", { product_id: pid, limit: v }).then(function(d){
+      if(d && d.ok === false){ toast(d.error || "设置失败"); return; }
+      closeModal(); toast("已将 " + pid + " 设为每账号 " + v + " 单/月");
+      state.qdata = null;
+      renderQuery(pid);
+    }).catch(function(e){ if(e.message !== "AUTH") toast("设置失败：" + e.message); });
+  });
+}
+
+/* ================= 管理员：配置客户可用账号 ================= */
+function openScopeModal(c){
+  var scope = c.account_scope === "assigned" ? "assigned" : "all";
+  var rows = [], picked = {};
+  function body(){
+    var on = scope === "assigned";
+    var cnt = rows.filter(function(a){ return picked[a.id]; }).length;
+    var list = rows.length
+      ? rows.map(function(a){
+          var ck = (!on || picked[a.id]) ? ' checked' : '';
+          return '<label class="list-item">' +
+            '<input type="checkbox" data-acc="' + a.id + '"' + ck + (on ? '' : ' disabled') + '>' +
+            '<span class="nm"><b>' + h(a.account) + '</b>' + (a.remark ? ' <span class="tiny muted">' + h(a.remark) + '</span>' : '') + '</span>' +
+            '<span class="badge ' + (a.enabled ? "b-ok" : "b-gray") + '">' + (a.enabled ? "启用中" : "已停用") + '</span>' +
+          '</label>';
+        }).join("")
+      : '<div class="empty" style="padding:18px"><b>还没有平台账号</b>请先在上方「平台账号池」添加账号</div>';
+    return '<div class="row" style="justify-content:space-between;margin-bottom:10px">' +
+        '<div class="seg" id="sMode">' +
+          '<button data-scope="all" class="' + (on ? "" : "on") + '">全部账号</button>' +
+          '<button data-scope="assigned" class="' + (on ? "on" : "") + '">指定账号</button>' +
+        '</div>' +
+        (on ? '<span class="tiny"><button class="mini" id="sAll">全选</button> <button class="mini" id="sNone">清空</button></span>' : '') +
+      '</div>' +
+      '<div class="hint" style="margin:0 0 10px">' + (on
+        ? '该客户只能看到和使用勾选的账号（已选 <b>' + cnt + '</b> / ' + rows.length + ' 个）。'
+        : '该客户可使用全部启用的平台账号，以后新增账号也会自动可用。') + '</div>' +
+      '<div class="ck-list">' + list + '</div>';
+  }
+  function paint(){
+    document.getElementById("sBox").innerHTML = body();
+    document.querySelectorAll("#sMode button").forEach(function(b){
+      b.addEventListener("click", function(){ scope = b.dataset.scope; paint(); });
+    });
+    var sa = document.getElementById("sAll"), sn = document.getElementById("sNone");
+    if(sa) sa.addEventListener("click", function(){ rows.forEach(function(a){ picked[a.id] = true; }); paint(); });
+    if(sn) sn.addEventListener("click", function(){ picked = {}; paint(); });
+    document.querySelectorAll("#sBox input[data-acc]").forEach(function(x){
+      x.addEventListener("change", function(){
+        if(x.checked) picked[x.dataset.acc] = true; else delete picked[x.dataset.acc];
+        var cnt = rows.filter(function(a){ return picked[a.id]; }).length;
+        var el = document.querySelector("#sBox .hint b");
+        if(el) el.textContent = cnt;
+      });
+    });
+  }
+  openModal("配置可用账号 · " + (c.display_name || c.username),
+    '<div class="hint" style="margin:-2px 0 12px">控制该客户在「查单 / 记单」中能看到、能使用的平台账号；管理员本人不受限制。</div>' +
+    '<div id="sBox"><div class="loading">加载中…</div></div>',
+    '<button id="mCancel">取消</button><button id="mOk" class="primary">保存</button>');
+  document.getElementById("mCancel").addEventListener("click", closeModal);
+  adminApi("list_assignments", { user_id: c.id }).then(function(d){
+    var box = document.getElementById("sBox");
+    if(!box) return;
+    if(d && d.ok === false){ box.innerHTML = '<div class="result bad">' + h(d.error || "加载失败") + '</div>'; return; }
+    rows = (d && d.accounts) || [];
+    rows.forEach(function(a){ if(a.assigned) picked[a.id] = true; });
+    paint();
+  }).catch(function(e){
+    var box = document.getElementById("sBox");
+    if(box && e.message !== "AUTH") box.innerHTML = '<div class="result bad">加载失败：' + h(e.message) + '</div>';
+  });
+  document.getElementById("mOk").addEventListener("click", function(){
+    var btn = document.getElementById("mOk");
+    var ids = Object.keys(picked).map(Number);
+    if(scope === "assigned" && !ids.length){ toast("请至少勾选一个账号，或改为「全部账号」"); return; }
+    btn.disabled = true; btn.textContent = "保存中…";
+    adminApi("set_assignments", { user_id: c.id, scope: scope, account_ids: ids }).then(function(r){
+      if(r && r.ok === false){ btn.disabled = false; btn.textContent = "保存"; toast(r.error || "保存失败"); return; }
+      closeModal();
+      toast(scope === "assigned" ? ("已限制为 " + r.count + " 个可用账号") : "已设为可使用全部账号");
+      loadSettingsLists();
+    }).catch(function(e){
+      btn.disabled = false; btn.textContent = "保存";
+      if(e.message !== "AUTH") toast("保存失败：" + e.message);
+    });
+  });
+}
+
+/* ================= 启动 ================= */
+function boot(){
+  return api("me").then(function(d){
+    if(!d || d.ok !== true){ renderLogin("登录状态已失效，请重新登录"); return Promise.reject(new Error("AUTH")); }
+    state.user = d.user;
+    state.defaultLimit = d.default_limit || 100;
+    state.admin.defaultLimit = state.defaultLimit;
+    if(!state.month) state.month = curMonth();
+    return Promise.all([
+      api("accounts").catch(function(){ return {}; }),
+      api("months").catch(function(){ return {}; }),
+      isAdmin() ? adminApi("list_customers", {}).catch(function(){ return {}; }) : Promise.resolve({})
+    ]).then(function(res){
+      state.accounts = (res[0] && res[0].accounts) || [];
+      state.months = (res[1] && res[1].months) || [];
+      if(isAdmin()) state.admin.customers = (res[2] && res[2].customers) || [];
+      renderTab();
+    });
+  });
+}
+
+try{
+  cloud = WorkBuddyCloud.createWorkBuddyCloud({
+    endpoint: PUBLIC_CONFIG.endpoint,
+    oauthRelayBaseUrl: PUBLIC_CONFIG.oauthRelayBaseUrl,
+    publishableKey: PUBLIC_CONFIG.publishableKey
+  });
+}catch(e){
+  shell('<div class="center"><div class="card" style="max-width:420px"><h1>初始化失败</h1><p class="muted tiny">' + h(e.message) + '</p></div></div>');
+  return;
+}
+if(state.token){
+  boot().catch(function(e){ if(e.message !== "AUTH") renderLogin("加载失败：" + e.message); });
+} else {
+  renderLogin("");
+}
+
+})();
+</script>
+</body>
+</html>
