@@ -142,6 +142,18 @@ SELECT * FROM client_events ORDER BY id DESC LIMIT 50;
 
 手动触发：仓库 Actions 页 → `uptime` → Run workflow。
 
+两个必须知道的坑：
+
+- **耗时数据不代表国内体感**。探针跑在 GitHub 的海外 runner 上，实测首页 6.5 秒（国内实际约 0.6 秒）。判断健康只看状态码，别看毫秒数。
+- **仓库连续 60 天没有提交，GitHub 会自动停用 schedule 触发**。本项目只在状态变化时才提交，所以长期一切正常反而可能被停用。发现 Actions 里 schedule 变灰，手动 Run 一次即可恢复；或随便提交一个文件。
+
+### 故障时的排查顺序
+
+1. `monitor/incidents.log` 看首尾两行，锁定窗口
+2. `client_events` 里 `page_load` 是否同时间段断档（断档=没人打开成功，佐证是服务端而非个别客户）
+3. 本机 `./tools/healthcheck.sh` 复核当前状态
+4. 若 DNS 与状态码都正常但仍有人报错，看 `api_error` / `js_error` 的 detail
+
 ### 前端加固（v1.1.0）
 
 | 改动 | 解决什么 |
