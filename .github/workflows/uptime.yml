@@ -59,7 +59,7 @@ jobs:
             || echo "创建 Issue 失败（可能是权限或频率限制）"
 
       - name: 恢复时关闭告警
-        if: steps.probe.outputs.changed == 'true' && steps.probe.outputs.state == 'up'
+        if: steps.probe.outputs.event == 'recovered'
         env:
           GH_TOKEN: ${{ github.token }}
           TS: ${{ steps.probe.outputs.ts }}

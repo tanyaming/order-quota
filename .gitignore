@@ -4,3 +4,6 @@
 node_modules/
 .vscode/
 .idea/
+
+# 故障记录必须入库，否则等于没有
+!monitor/incidents.log
