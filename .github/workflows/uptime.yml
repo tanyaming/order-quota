@@ -1,0 +1,71 @@
+name: uptime
+
+# 每 5 分钟探活一次。注意：GitHub 的 schedule 允许延迟，高峰期可能推后 5~15 分钟，
+# 所以它适合"发现"，不适合"精确定位窗口"。精确定位靠 monitor/incidents.log + 数据库里的
+# client_events（用户每次成功打开页面都会留一条 page_load）。
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: uptime-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 探活
+        id: probe
+        run: python3 tools/uptime_probe.py
+
+      - name: 写入 Job Summary
+        if: always()
+        run: cat monitor/last_summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 状态变化时提交记录
+        if: steps.probe.outputs.changed == 'true'
+        run: |
+          git config user.name "uptime-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add monitor/
+          git commit -m "monitor: ${{ steps.probe.outputs.event }} @ ${{ steps.probe.outputs.ts }} (${{ steps.probe.outputs.state }})"
+          git pull --rebase --autostash origin main || true
+          git push || echo "推送失败，下轮再试（不影响告警）"
+
+      - name: 故障告警
+        if: steps.probe.outputs.changed == 'true' && steps.probe.outputs.state != 'up'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ steps.probe.outputs.state }}
+          REASONS: ${{ steps.probe.outputs.reasons }}
+          TS: ${{ steps.probe.outputs.ts }}
+          S_CODE: ${{ steps.probe.outputs.static_code }}
+          S_MS: ${{ steps.probe.outputs.static_ms }}
+          R_CODE: ${{ steps.probe.outputs.rpc_code }}
+        run: |
+          gh issue create \
+            --title "站点不可用 [$STATE] · $TS" \
+            --body "$(printf '自动探活于 **%s** 检测到异常。\n\n- 总体状态：`%s`\n- 异常原因：%s\n- 首页 HTTP：%s（%sms）\n- 数据平面 HTTP：%s\n\n排查顺序：\n1. 看 `monitor/incidents.log` 首尾时间，确认故障窗口\n2. 查 `client_events` 表 `page_load` 是否在同时间段断档\n3. 在本机跑 `./tools/healthcheck.sh` 复核\n\n恢复后本流程会自动关闭此 Issue。\n' "$TS" "$STATE" "$REASONS" "$S_CODE" "$S_MS" "$R_CODE")" \
+            || echo "创建 Issue 失败（可能是权限或频率限制）"
+
+      - name: 恢复时关闭告警
+        if: steps.probe.outputs.changed == 'true' && steps.probe.outputs.state == 'up'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TS: ${{ steps.probe.outputs.ts }}
+        run: |
+          nums=$(gh issue list --state open --search "站点不可用 in:title" --json number --jq '.[].number' 2>/dev/null || true)
+          for n in $nums; do
+            gh issue comment "$n" --body "已于 $TS 自动检测到恢复。" || true
+            gh issue close "$n" || true
+          done

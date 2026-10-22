@@ -159,10 +159,20 @@ tbody tr:hover{background:#fafbfc}
 <div class="mask" id="mask" hidden><div class="modal" id="modal"></div></div>
 <div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@0.1.4-dev.ca27990.202610161713/lib/index.global.js"></script>
+<script>
+/* SDK 双源兜底：jsdelivr 失败改走 unpkg；版本已锁死，避免 @dev 浮动更新导致线上静默崩溃。
+   注意：document.write 注入的脚本在当前 script 块结束后才执行，所以这里不能立刻复检，
+   真正的"是否加载成功"在下面 IIFE 初始化前判定。 */
+var SDK_SRC = (typeof WorkBuddyCloud !== "undefined") ? "jsdelivr" : "unpkg";
+if (SDK_SRC === "unpkg") {
+  document.write('<script src="https://unpkg.com/@tencent-ai/workbuddy-cloud-sdk@0.1.4-dev.ca27990.202610161713/lib/index.global.js"><\/script>');
+}
+</script>
 <script>
 (function(){
 "use strict";
+var BOOT_MS = Date.now();
 
 /* ================= 配置 ================= */
 var PUBLIC_CONFIG = {
@@ -170,6 +180,47 @@ var PUBLIC_CONFIG = {
   oauthRelayBaseUrl: "https://www.workbuddy.cn/v2/as/genie-baas/oauth",
   publishableKey: "wbpk_c9U187dBqjV5JL5zeCS2mM_yHukQ3Kv1v7cVI1kVLGd0JXhHjfaudWe"
 };
+
+var APP_VERSION = "1.1.0";
+
+/* ================= 运行日志上报 =================
+   目的：容器/网络故障后能回溯。写入 client_events 表（经 fn_log）。
+   原则：绝不影响主流程 —— 全部 try 包裹，失败静默，不重试。 */
+var LOG_Q = [], LOG_T = null, LOG_URL = PUBLIC_CONFIG.endpoint + "/.cloud/database/rest/rpc/fn_log";
+
+function logPush(kind, detail){
+  try{
+    if (LOG_Q.length >= 40) return;
+    LOG_Q.push({ kind: String(kind || "unknown").slice(0, 40), detail: detail || {} });
+    if (!LOG_T) LOG_T = setTimeout(function(){ LOG_T = null; logFlush(); }, 900);
+  }catch(e){}
+}
+
+function logFlush(){
+  try{
+    if (!LOG_Q.length) return;
+    var batch = LOG_Q.splice(0, 20);
+    fetch(LOG_URL, {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json", "x-wb-webapp-access-key": PUBLIC_CONFIG.publishableKey },
+      body: JSON.stringify({ p_events: batch, p_version: APP_VERSION, p_ua: String(navigator.userAgent || "").slice(0, 180) })
+    }).catch(function(){});
+  }catch(e){}
+}
+
+window.addEventListener("pagehide", logFlush);
+window.addEventListener("error", function(ev){
+  logPush("js_error", {
+    msg: String(ev.message || "").slice(0, 300),
+    src: String(ev.filename || "").slice(0, 180),
+    line: ev.lineno || 0
+  });
+});
+window.addEventListener("unhandledrejection", function(ev){
+  var r = ev.reason;
+  logPush("promise_error", { msg: String((r && (r.message || r)) || "").slice(0, 300) });
+});
 
 var cloud = null;
 var state = {
@@ -210,12 +261,23 @@ function escAttr(s){ return h(s).replace(/\n/g, " "); }
 
 /* ================= 云端调用 ================= */
 function rpcCall(fn, args){
+  var t0 = Date.now();
   return cloud.database.rpc(fn, args).then(function(res){
     if(res.error){
       var e = res.error;
-      throw new Error((e.message || e.details || "请求失败") + (e.code ? " (" + e.code + ")" : ""));
+      var err = new Error((e.message || e.details || "请求失败") + (e.code ? " (" + e.code + ")" : ""));
+      err.code = e.code;
+      logPush("api_error", { fn: fn, ms: Date.now() - t0, code: String(e.code || ""), msg: String(err.message).slice(0, 200) });
+      throw err;
     }
     return res.data;
+  }, function(err){
+    logPush("api_fail", {
+      fn: fn, ms: Date.now() - t0,
+      msg: String((err && err.message) || err || "").slice(0, 200),
+      online: navigator.onLine !== false
+    });
+    throw err;
   });
 }
 function api(action, payload){
@@ -253,6 +315,37 @@ document.addEventListener("keydown", function(e){
     if(b && !document.getElementById("mask").hidden) b.click();
   }
 });
+
+/* 启动失败兜底：SDK 没加载出来或初始化抛错时，给用户明确的人话而不是白屏 */
+function renderBootFail(errMsg){
+  var tried = 0;
+  try{ tried = parseInt(sessionStorage.getItem("pol_retry") || "0", 10) || 0; }catch(e){}
+  var msg = (SDK_SRC === "none")
+    ? "核心组件加载失败。通常是网络中断或 CDN 不可用，页面会自动重试一次。"
+    : (errMsg || "未知错误");
+  var act = '';
+  if (SDK_SRC === "none" && tried < 1){
+    act = '<p class="muted tiny" style="margin-top:16px">正在自动重试…</p>';
+    try{ sessionStorage.setItem("pol_retry", "1"); }catch(e){}
+    setTimeout(function(){ location.reload(); }, 4000);
+  } else if (tried < 3){
+    act = '<button class="primary" id="retryBtn" style="margin-top:16px">重新加载</button>';
+  } else {
+    act = '<p class="muted tiny" style="margin-top:16px">已重试多次仍未成功，请稍后再试，或联系管理员。</p>';
+  }
+  shell(
+    '<div class="center"><div class="card" style="max-width:430px">' +
+      '<h1>服务暂不可用</h1>' +
+      '<p class="muted tiny">' + h(msg) + '</p>' + act +
+      '<p class="muted tiny" style="margin-top:16px;opacity:.55">版本 ' + h(APP_VERSION) + ' · SDK: ' + h(SDK_SRC) + '</p>' +
+    '</div></div>'
+  );
+  var b = document.getElementById("retryBtn");
+  if (b) b.addEventListener("click", function(){
+    try{ sessionStorage.setItem("pol_retry", String(tried + 1)); }catch(e){}
+    location.reload();
+  });
+}
 
 /* ================= 登录页 ================= */
 function renderLogin(errMsg){
@@ -1438,15 +1531,31 @@ function boot(){
 }
 
 try{
+  if (typeof WorkBuddyCloud === "undefined") {
+    SDK_SRC = "none";
+    throw new Error("核心组件未加载（两个 CDN 均不可用）");
+  }
   cloud = WorkBuddyCloud.createWorkBuddyCloud({
     endpoint: PUBLIC_CONFIG.endpoint,
     oauthRelayBaseUrl: PUBLIC_CONFIG.oauthRelayBaseUrl,
     publishableKey: PUBLIC_CONFIG.publishableKey
   });
 }catch(e){
-  shell('<div class="center"><div class="card" style="max-width:420px"><h1>初始化失败</h1><p class="muted tiny">' + h(e.message) + '</p></div></div>');
+  logPush("init_fail", { msg: String(e.message || "").slice(0, 300), sdk: SDK_SRC });
+  logFlush();
+  renderBootFail(e.message);
   return;
 }
+
+try{ sessionStorage.removeItem("pol_retry"); }catch(e){}
+
+logPush("page_load", {
+  ms: Date.now() - BOOT_MS,
+  sdk: SDK_SRC,
+  online: navigator.onLine !== false,
+  net: (navigator.connection && navigator.connection.effectiveType) || ""
+});
+
 if(state.token){
   boot().catch(function(e){ if(e.message !== "AUTH") renderLogin("加载失败：" + e.message); });
 } else {
