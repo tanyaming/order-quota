@@ -1,12 +1,13 @@
-# 探活 2026-11-06 04:47:21 (UTC+8)
+# 探活 2026-11-12 01:51:10 (UTC+8)
 
 | 项目 | 结果 |
 |---|---|
-| 总体状态 | **UP** |
+| 总体状态 | **DOWN** |
 | DNS | OK |
-| 首页 | HTTP 200 · 3662ms · 86710B |
-| 数据平面 | HTTP 200 · 1419ms |
-| SDK(jsdelivr) | HTTP 200 · 1348ms |
+| 首页 | HTTP 403 · 1074ms · 2872B |
+| 数据平面 | HTTP 200 · 1410ms |
+| SDK(jsdelivr) | HTTP 200 · 268ms |
 
+**异常原因**：首页 HTTP 403（1074ms）
 
-状态变化：`down` → `up`（事件 recovered）
+状态变化：`up` → `down`（事件 state_up_to_down）

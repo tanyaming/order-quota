@@ -5,3 +5,4 @@
 2026-10-24 03:26:03	degraded	up	recovered	200	4539	200	-
 2026-11-05 21:29:05	up	down	state_up_to_down	0	20076	200	首页 HTTP 0（20076ms）
 2026-11-06 04:47:21	down	up	recovered	200	3662	200	-
+2026-11-12 01:51:10	up	down	state_up_to_down	403	1074	200	首页 HTTP 403（1074ms）
