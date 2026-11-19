@@ -10,3 +10,5 @@ node_modules/
 
 # 本机调试用的告警凭据（SMTP 授权码），绝不入库
 .env.alert
+__pycache__/
+*.pyc
