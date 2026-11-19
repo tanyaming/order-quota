@@ -111,7 +111,28 @@ python3 -m http.server 8899 --bind 127.0.0.1
 
 检查 6 项：DNS 多线路一致性 / TLS 剩余天数 / 静态页（含与本地 md5 比对）/ 数据平面 / SDK CDN 延迟 / 10 路并发。结果追加到 `logs/healthcheck-YYYYMMDD.log`。
 
-### 2. 客户端埋点
+### 2. 告警通道
+
+**目标**：站点不可用 / 恢复时，直接推到手机，而不是躺在 GitHub Issue 里等发现。
+
+> 2026-11-12 01:51 入口失效，探针当天就开了 Issue #4，但没人看，硬是挂了 8 天。问题不在探针，在**送达**。
+
+邮件通道（`tools/notify.py`，workflow 自动调用）：
+
+| 变量 | 说明 |
+|---|---|
+| `SMTP_HOST` / `SMTP_PORT` | 默认 `smtp.163.com` / `465`（SSL） |
+| `SMTP_USER` | 发件邮箱，如 `tym_maile@163.com` |
+| `SMTP_PASS` | **163 客户端授权码**，不是登录密码 |
+| `ALERT_TO` | 收件邮箱，可逗号分隔多个 |
+
+凭据存 GitHub Secrets（仓库 Settings → Secrets and variables → Actions），**不入库**。本机调试可建 `.env.alert`（已 gitignore）。
+
+未配置凭据时脚本输出 `SKIP` 并以 0 退出，不会把 workflow 标红。
+
+**已知局限（必须正视）**：GitHub Actions 免费 cron 被严重降频 —— 名义 `*/5`，2026-11-18 实测全天只跑 3 次（间隔 8~16 小时）。**它只能兜底，不能承担「即时」。** 要 5 分钟级必须另加一个第三方定时器（UptimeRobot 等），探测同一个分享链接。
+
+### 3. 客户端埋点
 
 页面自动上报以下事件到 `client_events`：
 
@@ -133,7 +154,7 @@ SELECT * FROM client_events ORDER BY id DESC LIMIT 50;
 
 写入侧有限流（每分钟 300 条）与字段截断（单条 detail ≤ 2000 字节），公开 key 被滥用也打不爆库。
 
-### 3. GitHub Actions 探活
+### 4. GitHub Actions 探活
 
 `.github/workflows/uptime.yml`，每 5 分钟一次：
 
