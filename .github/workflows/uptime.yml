@@ -42,6 +42,22 @@ jobs:
           git pull --rebase --autostash origin main || true
           git push || echo "推送失败，下轮再试（不影响告警）"
 
+      - name: 邮件告警（手机可推送）
+        if: steps.probe.outputs.changed == 'true'
+        env:
+          SMTP_HOST: smtp.163.com
+          SMTP_PORT: "465"
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          STATE: ${{ steps.probe.outputs.state }}
+          REASONS: ${{ steps.probe.outputs.reasons }}
+          TS: ${{ steps.probe.outputs.ts }}
+          S_CODE: ${{ steps.probe.outputs.static_code }}
+          S_MS: ${{ steps.probe.outputs.static_ms }}
+          R_CODE: ${{ steps.probe.outputs.rpc_code }}
+        run: python3 tools/notify.py
+
       - name: 故障告警
         if: steps.probe.outputs.changed == 'true' && steps.probe.outputs.state != 'up'
         env:

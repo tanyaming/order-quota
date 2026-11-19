@@ -7,3 +7,6 @@ node_modules/
 
 # 故障记录必须入库，否则等于没有
 !monitor/incidents.log
+
+# 本机调试用的告警凭据（SMTP 授权码），绝不入库
+.env.alert
