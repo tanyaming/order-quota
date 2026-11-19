@@ -22,9 +22,13 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
-BASE = "https://order-quota.app.workbuddy.host"
+HOST_URL = "https://order-quota.app.workbuddy.host"
 HOST = "order-quota.app.workbuddy.host"
-RPC = BASE + "/.cloud/database/rest/rpc/fn_api"
+# 平台自 2026-11 起要求分享链接带 sharecode，裸域名会返回 403「链接不完整」。
+# 重新发布后 sharecode 可能变化：优先取环境变量，未设置时才用仓库内的默认值。
+SHARE_CODE = os.environ.get("APP_SHARE_CODE", "UUGXDCLHTG").strip()
+BASE = HOST_URL + "/?sharecode=" + SHARE_CODE
+RPC = HOST_URL + "/.cloud/database/rest/rpc/fn_api"
 SDK = "https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk/lib/index.global.js"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MON = os.path.join(ROOT, "monitor")
@@ -76,7 +80,7 @@ def main():
     ts = now()
     dns = dns_ok()
 
-    s_code, s_ms, s_body = http(BASE + "/", read=None)
+    s_code, s_ms, s_body = http(BASE, read=None)
     static_bytes = len(s_body.encode("utf-8"))
 
     key = publishable_key()
@@ -85,7 +89,11 @@ def main():
         r_code, r_ms, r_body = http(
             RPC,
             data=json.dumps({"p_token": "__probe__", "p_action": "accounts", "p_payload": {}}).encode(),
-            headers={"Content-Type": "application/json", "x-wb-webapp-access-key": key},
+            headers={
+                "Content-Type": "application/json",
+                "x-wb-webapp-access-key": key,
+                "Origin": HOST_URL,
+            },
         )
     sdk_code, sdk_ms, _ = http(SDK)
 
@@ -102,6 +110,8 @@ def main():
         reasons.append("DNS 解析失败")
     if s_code != 200:
         reasons.append("首页 HTTP %s（%dms）" % (s_code, s_ms))
+        if "链接不完整" in s_body:
+            reasons.append("平台返回「链接不完整」：sharecode 已失效，需重新发布并在 tools/uptime_probe.py 更新 SHARE_CODE")
     if key and not rpc_ok:
         reasons.append("数据平面 HTTP %s %s" % (r_code, r_body[:120].replace("\n", " ")))
     if not key:

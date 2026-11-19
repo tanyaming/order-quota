@@ -4,10 +4,12 @@
 
 ## 线上地址
 
-https://order-quota.app.workbuddy.host/
+https://order-quota.app.workbuddy.host/?sharecode=UUGXDCLHTG
 
 - 应用 ID（WorkBuddy 应用托管）：`wbapp_c9U187dBqjV5JL5zeCS2mM`
 - 入口文件：`index.html`
+- **注意**：裸域名 `https://order-quota.app.workbuddy.host/` 会返回 403「链接不完整」，必须带 `sharecode`。平台在 2026-11 调整了分享链接格式，旧的无参链接已全部失效。
+- 重新发布后 sharecode 可能变化：链接管理入口在「设置—数据管理—应用」，发布成功后把新值同步到 `README.md`、`tools/uptime_probe.py`、`tools/healthcheck.sh` 三处（探针与体检脚本都支持 `APP_SHARE_CODE` 环境变量覆盖）。
 
 ## 文件说明
 

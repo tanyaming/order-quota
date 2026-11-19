@@ -13,6 +13,10 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INDEX="$DIR/index.html"
 HOSTNAME_APP="order-quota.app.workbuddy.host"
 BASE="https://$HOSTNAME_APP"
+# 平台自 2026-11 起要求分享链接带 sharecode，裸域名会返回 403「链接不完整」。
+# 重新发布后若 sharecode 变化，改这里（或导出 APP_SHARE_CODE）。
+SHARE_CODE="${APP_SHARE_CODE:-UUGXDCLHTG}"
+PAGE_URL="$BASE/?sharecode=$SHARE_CODE"
 SDK_URL="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"
 LOGDIR="$DIR/logs"
 LOG="$LOGDIR/healthcheck-$(date +%Y%m%d).log"
@@ -99,16 +103,20 @@ check_tls() {
 
 # ---------- 3. 静态页 ----------
 check_static() {
-  section "静态页 https://$HOSTNAME_APP/"
+  section "静态页 $PAGE_URL"
   local body="/tmp/hc_body.$$"
   local out
-  out="$(curl -s -o "$body" -w "%{http_code} %{time_total} %{size_download}" --max-time 25 "$BASE/" 2>/dev/null)"
+  out="$(curl -s -o "$body" -w "%{http_code} %{time_total} %{size_download}" --max-time 25 "$PAGE_URL" 2>/dev/null)"
   local code t size
   code=$(printf '%s' "$out" | awk '{print $1}')
   t=$(printf '%s' "$out" | awk '{print $2}')
   size=$(printf '%s' "$out" | awk '{print $3}')
   if [ "$code" != "200" ]; then
-    bad "HTTP ${code}（耗时 ${t}s）← 页面打不开就是这个"
+    if grep -q '链接不完整' "$body" 2>/dev/null; then
+      bad "HTTP ${code} 平台「链接不完整」← sharecode 已失效，需重新发布并更新 SHARE_CODE"
+    else
+      bad "HTTP ${code}（耗时 ${t}s）← 页面打不开就是这个"
+    fi
     rm -f "$body"; return
   fi
   local r l
@@ -131,7 +139,7 @@ check_api() {
   fi
   local body code
   body="$(curl -s -w '\n%{http_code}' --max-time 25 -X POST "$BASE/.cloud/database/rest/rpc/fn_api" \
-        -H "x-wb-webapp-access-key: $KEY" -H "Content-Type: application/json" \
+        -H "x-wb-webapp-access-key: $KEY" -H "Content-Type: application/json" -H "Origin: $BASE" \
         -d '{"p_token":"__healthcheck__","p_action":"accounts","p_payload":{}}' 2>/dev/null)"
   code=$(printf '%s' "$body" | tail -1)
   local payload
@@ -172,7 +180,7 @@ check_sdk() {
 check_concurrency() {
   section "并发 10 路（模拟客户集中下单）"
   local res
-  res="$(seq 10 | xargs -P 10 -I{} curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 "$BASE/" 2>/dev/null)"
+  res="$(seq 10 | xargs -P 10 -I{} curl -s -o /dev/null -w "%{http_code}\n" --max-time 25 "$PAGE_URL" 2>/dev/null)"
   local c200 other
   c200=$(printf '%s\n' "$res" | grep -c '^200$')
   other=$(printf '%s\n' "$res" | grep -vc '^200$')
